@@ -112,5 +112,4 @@ if st.button("Generate Tea Steps"):
 <img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/3e6854d1-08e5-41d6-ab05-472f44a9e833" />
 
 <img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/e2375dde-355a-475b-8acc-2e1b14098498" />
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/e2375dde-355a-475b-8acc-2e1b14098498" />
 
