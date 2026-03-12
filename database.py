@@ -1,38 +1,28 @@
 import streamlit as st
 from datetime import datetime
 from pymongo import MongoClient
-import os
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
-
-# Get values from .env
-MONGO_URL = os.getenv("MONGO_URL")
-DB_NAME = os.getenv("DB_NAME")
-COLLECTION_NAME = os.getenv("COLLECTION_NAME")
+from config import MONGO_URL, DB_NAME, COLLECTION_NAME
 
 st.title("Tea Maker App")
 
-# Check if env variables exist
-if not MONGO_URL or not DB_NAME or not COLLECTION_NAME:
-    st.error("⚠️ Environment variables not found. Please check your .env file.")
-else:
-    try:
-        client = MongoClient(MONGO_URL)
-        db = client[DB_NAME]
-        collection = db[COLLECTION_NAME]
+# Database connection
+try:
+    client = MongoClient(MONGO_URL)
+    db = client[DB_NAME]
+    collection = db[COLLECTION_NAME]
 
-        collection.insert_one({
-            "test": "database created",
-            "time": datetime.now()
-        })
+    # Insert test record
+    collection.insert_one({
+        "test": "database created",
+        "time": datetime.now()
+    })
 
-        st.success("Database Connected ✅")
+    st.success("Database Connected ✅")
 
-    except Exception:
-        st.error("Cannot connect to MongoDB. Check if MongoDB is running.")
+except Exception:
+    st.error("Cannot connect to MongoDB. Check if MongoDB is running.")
 
+# User input
 user_input = st.text_input(
     "Type anything and press Generate (order does not matter)"
 )
