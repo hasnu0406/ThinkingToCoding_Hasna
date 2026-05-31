@@ -1,0 +1,65 @@
+Use this full reinstall flow.
+
+Backend
+From C:\Users\admin\OneDrive\Desktop\project phase 1:
+
+python -m venv .venv
+& .\.venv\Scripts\Activate.ps1
+pip install --upgrade pip
+pip install -r requirements.txt
+If .venv already exists and you want a fresh reinstall of packages only:
+
+& .\.venv\Scripts\Activate.ps1
+pip install --upgrade --force-reinstall -r requirements.txt
+Frontend
+From C:\Users\admin\OneDrive\Desktop\project phase 1\frontend:
+
+npm install
+If you want a clean frontend reinstall:
+
+Remove-Item -Recurse -Force .\node_modules
+Remove-Item -Force .\package-lock.json
+npm install
+Run
+Backend, from project root:
+
+& .\.venv\Scripts\python.exe .\main.py
+Frontend, from frontend:
+
+npm start
+Needs to be installed on your system
+
+Python 3.10+
+Node.js + npm
+MongoDB local server
+Project packages
+Backend:
+
+fastapi
+uvicorn[standard]
+pymongo
+python-dotenv
+anthropic
+python-multipart
+python-docx
+groq
+pypdf
+Frontend:
+
+installed automatically by npm install from frontend\package.json
+
+
+
+commands to run:
+
+
+Backend, from C:\Users\admin\OneDrive\Desktop\project phase 1:
+
+& .\.venv\Scripts\python.exe .\main.py
+
+
+
+C:\Users\admin\OneDrive\Desktop\project phase 1\frontend:
+
+
+npm start

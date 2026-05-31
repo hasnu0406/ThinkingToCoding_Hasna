@@ -1,0 +1,485 @@
+<div class="premium-container">
+  <!-- Animated background -->
+  <app-three-bg></app-three-bg>
+
+  <!-- Platform Wrapper: Sidebar + Main Content -->
+  <div class="platform-wrapper">
+    
+    <!-- Premium Sidebar Navigation -->
+    <aside class="sidebar-nav">
+      <div class="brand-container">
+        <div class="brand-logo">🤖</div>
+        <div class="brand-details">
+          <h2>Candidate Search</h2>
+          <span>Bot</span>
+        </div>
+      </div>
+      
+      <ul class="nav-menu">
+        <li class="nav-item" [class.active]="activeView === 'dashboard'" (click)="setView('dashboard')">
+          <span class="nav-icon">📊</span>
+          <span class="nav-text">Dashboard</span>
+        </li>
+        <li class="nav-item" [class.active]="activeView === 'database'" (click)="setView('database')">
+          <span class="nav-icon">📂</span>
+          <span class="nav-text">Database Workspace</span>
+        </li>
+        <li class="nav-item" [class.active]="activeView === 'upload'" (click)="setView('upload')">
+          <span class="nav-icon">📤</span>
+          <span class="nav-text">Upload Resumes</span>
+        </li>
+        <li class="nav-item" [class.active]="activeView === 'search'" (click)="setView('search')">
+          <span class="nav-icon">🔍</span>
+          <span class="nav-text">AI Intelligent Search</span>
+        </li>
+        <li class="nav-item" [class.active]="activeView === 'history'" (click)="setView('history')">
+          <span class="nav-icon">⏱️</span>
+          <span class="nav-text">Search History</span>
+        </li>
+      </ul>
+      
+      <div class="sidebar-footer">
+        <div class="status-indicator">
+          <span class="pulse-dot"></span>
+          <span>Engine Active (v1.0.0)</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <div class="premium-shell">
+      
+      <!-- Error & Notice Toast -->
+      <div class="error-toast" [class.notice]="messageType === 'notice'" *ngIf="errorMessage" [@fadeInOut]>
+        <div class="error-content">
+          <span class="error-icon">{{ messageType === 'notice' ? 'i' : '!' }}</span>
+          <div class="error-text">
+            <p class="error-title">{{ messageType === 'notice' ? 'Notice' : 'Error' }}</p>
+            <p class="error-message">{{ errorMessage }}</p>
+          </div>
+          <button type="button" class="close-btn" (click)="errorMessage = ''">✕</button>
+        </div>
+      </div>
+
+      <!-- ==================== VIEW 1: DASHBOARD ==================== -->
+      <section class="viewport-section" *ngIf="activeView === 'dashboard'" [@fadeInOut]>
+        <!-- Hero intro in Dashboard -->
+        <header class="dashboard-hero">
+          <div class="hero-content">
+            <div class="badge">INTELLIGENT RECRUITMENT PLATFORM</div>
+            <h1 class="hero-title">Candidate <span class="accent-text">Discovery</span> Dashboard</h1>
+            <p class="hero-subtitle">Streamlined profile parsing, natural-language search, and skill analytics.</p>
+          </div>
+        </header>
+
+        <!-- Stats Counter Panel -->
+        <div class="stats-grid">
+          <div class="stat-card" (click)="setView('database')">
+            <div class="stat-icon">📂</div>
+            <div class="stat-details">
+              <h3>{{ candidates.length }}</h3>
+              <p>Total Profiles</p>
+            </div>
+            <span class="stat-link">View Database ➜</span>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon">⚡</div>
+            <div class="stat-details">
+              <h3>{{ totalUniqueSkillsCount }}</h3>
+              <p>Unique Skills Extracted</p>
+            </div>
+            <span class="stat-link">Explore Skillsets</span>
+          </div>
+
+          <div class="stat-card" (click)="setView('upload')">
+            <div class="stat-icon">📤</div>
+            <div class="stat-details">
+              <h3>Upload</h3>
+              <p>New Resumes</p>
+            </div>
+            <span class="stat-link">Start Parsing ➜</span>
+          </div>
+
+          <div class="stat-card" (click)="setView('search')">
+            <div class="stat-icon">🔍</div>
+            <div class="stat-details">
+              <h3>AI Engine</h3>
+              <p>NL Search Tool</p>
+            </div>
+            <span class="stat-link">Launch Console ➜</span>
+          </div>
+        </div>
+
+        <!-- Dashboard Layout Split -->
+        <div class="dashboard-split">
+          <!-- Left: Top Skills Widget -->
+          <div class="widget-panel">
+            <div class="widget-header">
+              <h3>⚡ Extracted Skill Analytics</h3>
+              <p>Most common skills across candidate profiles. Click a skill to instantly trigger an AI search filter.</p>
+            </div>
+            <div class="skills-dashboard-cloud">
+              <button type="button" class="skill-cloud-tag" *ngFor="let skill of topSkillsList" (click)="searchBySkill(skill.name)">
+                <span class="skill-name">{{ skill.name }}</span>
+                <span class="skill-count">{{ skill.count }}</span>
+              </button>
+              <div class="empty-widget-state" *ngIf="topSkillsList.length === 0">
+                <p>No skills extracted yet</p>
+                <small>Upload candidate resumes in the "Upload Resumes" tab to see skill graphs.</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Recent Activity / Profile list -->
+          <div class="widget-panel">
+            <div class="widget-header">
+              <h3>🕒 Recent Profiles Added</h3>
+              <p>Quick access to the last uploaded candidate resumes.</p>
+            </div>
+            <div class="recent-profiles-list">
+              <div class="recent-profile-item" *ngFor="let candidate of recentCandidates" (click)="inspectCandidate(candidate)">
+                <div class="profile-avatar">{{ candidate.name.charAt(0).toUpperCase() }}</div>
+                <div class="profile-meta">
+                  <h4>{{ candidate.name }}</h4>
+                  <p>{{ candidate.role }} • <span class="exp">{{ candidate.experience }}</span></p>
+                </div>
+                <span class="profile-arrow">➜</span>
+              </div>
+              <div class="empty-widget-state" *ngIf="recentCandidates.length === 0">
+                <p>No profiles in database</p>
+                <small>Upload your first resume to see active profiles here.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== VIEW 2: RESUME UPLOAD ==================== -->
+      <section class="viewport-section" *ngIf="activeView === 'upload'" [@fadeInOut]>
+        <div class="action-card full-width-card">
+          <div class="card-header">
+            <div class="icon-circle">📤</div>
+            <div>
+              <h3>Resume Parser Console</h3>
+              <p>Upload new CVs to extract candidate details and generate job match suggestions</p>
+            </div>
+          </div>
+          
+          <div class="upload-zone-wrapper">
+            <form [formGroup]="uploadForm" (ngSubmit)="uploadResume()" class="action-form">
+              <div class="drag-drop-area">
+                <div class="upload-graphic">📄</div>
+                <h4>Select Resumes to Parse</h4>
+                <p class="card-description">Supports PDF, DOCX, and TXT files. You can select multiple documents at once.</p>
+                
+                <label class="file-upload">
+                  <span>{{ selectedFileSummary }}</span>
+                  <input type="file" accept=".pdf,.docx,.txt" multiple (change)="onFileSelected($event)">
+                </label>
+              </div>
+
+              <!-- Selected Files Details -->
+              <div class="file-meta upload-files-list" *ngIf="selectedFiles.length > 0">
+                <div class="file-list">
+                  <strong>Selected Resumes ({{ selectedFiles.length }}):</strong>
+                  <div class="file-item-pills">
+                    <span class="file-pill" *ngFor="let file of selectedFiles">{{ file.name }}</span>
+                  </div>
+                </div>
+                <button type="button" class="premium-btn btn-ghost" (click)="clearSelectedFile()">Clear All</button>
+              </div>
+
+              <div class="upload-actions">
+                <button type="submit" class="premium-btn btn-primary btn-large" [disabled]="isUploading || uploadForm.invalid">
+                  <span *ngIf="!isUploading">Parse & Upload {{ selectedFiles.length > 0 ? '(' + selectedFiles.length + ' files)' : '' }}</span>
+                  <span *ngIf="isUploading" class="loading">Parsing files in progress...</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== VIEW 3: AI INTELLIGENT SEARCH ==================== -->
+      <section class="viewport-section" *ngIf="activeView === 'search'" [@fadeInOut]>
+        <div class="action-card full-width-card">
+          <div class="card-header">
+            <div class="icon-circle">🔍</div>
+            <div>
+              <h3>AI-Powered Intelligent Search</h3>
+              <p>Ask natural-language questions to matching exact experience, target skills, and qualifications</p>
+            </div>
+          </div>
+
+          <form [formGroup]="searchForm" (ngSubmit)="searchCandidates()" class="action-form search-full-form">
+            <div class="search-prompt-row large-row">
+              <!-- AI Robot Assistant -->
+              <div class="robot-assistant" [class.thinking]="isSearching" aria-hidden="true">
+                <div class="thought-bubbles">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <div class="robot-antenna"></div>
+                <div class="robot-head">
+                  <div class="robot-eye"></div>
+                  <div class="robot-eye"></div>
+                  <div class="robot-mouth"></div>
+                </div>
+                <div class="robot-body">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <div class="robot-scan"></div>
+              </div>
+              
+              <div class="input-actions-wrapper">
+                <input
+                  type="text"
+                  formControlName="query"
+                  class="premium-input search-large-input"
+                  placeholder="e.g., Senior Node.js developer with 5+ years experience and AWS skills"
+                >
+                <div class="search-help-tips">
+                  <span>💡 Try: "Backend Engineer"</span>
+                  <span>💡 Try: "React Developer"</span>
+                  <span>💡 Try: "5 years experience"</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="search-actions-row">
+              <button type="submit" class="premium-btn btn-secondary" [disabled]="isSearching || searchForm.invalid">
+                <span *ngIf="!isSearching">Analyze & Search</span>
+                <span *ngIf="isSearching" class="loading">Evaluating Profiles...</span>
+              </button>
+              <button type="button" class="premium-btn btn-ghost" (click)="clearSearch()" [disabled]="isSearching || !hasActiveSearch">
+                Clear Results
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Inline Search Results Panel -->
+        <div class="search-results-console" *ngIf="hasActiveSearch">
+          <div class="widget-header search-results-header">
+            <h3>🔍 Match Results ({{ candidates.length }} matches)</h3>
+            <p>Scores are calculated using AI semantic match algorithms.</p>
+          </div>
+
+          <div class="search-results-grid">
+            <div class="result-card" *ngFor="let candidate of candidates" (click)="inspectCandidate(candidate)">
+              <div class="result-header">
+                <h4>{{ candidate.name }}</h4>
+                <span class="rank-badge" *ngIf="candidate.rank_score !== undefined" [title]="'Match Score: ' + candidate.rank_score">
+                  ⭐ {{ candidate.rank_score }}
+                </span>
+              </div>
+              <p class="result-role">{{ candidate.role }}</p>
+              <p class="result-exp">📅 {{ candidate.experience }}</p>
+              <div class="result-skills">
+                <span class="result-skill-tag" *ngFor="let skill of candidate.skills | slice:0:3">{{ skill }}</span>
+                <span class="result-skill-more" *ngIf="candidate.skills.length > 3">+{{ candidate.skills.length - 3 }}</span>
+              </div>
+              <button type="button" class="premium-btn btn-ghost result-btn">Inspect Profile ➜</button>
+            </div>
+          </div>
+
+          <!-- Empty search result view -->
+          <div class="empty-search-state" *ngIf="candidates.length === 0">
+            <p>No candidates match this search description.</p>
+            <small>Try a broader query or add more CVs to the database.</small>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== VIEW 4: DATABASE & WORKSPACE ==================== -->
+      <section class="viewport-section workspace-viewport" *ngIf="activeView === 'database'" [@fadeInOut]>
+        <div class="workspace-container">
+          <!-- Candidates Sidebar -->
+          <aside class="candidates-sidebar">
+            <div class="sidebar-header">
+              <div>
+                <h2>Profiles Database</h2>
+                <p class="candidate-count">{{ candidates.length }} profile{{ candidates.length === 1 ? '' : 's' }}</p>
+              </div>
+              <div class="sidebar-actions">
+                <button type="button" class="icon-btn" (click)="loadCandidates()" [disabled]="isSearching" title="Refresh">
+                  🔄
+                </button>
+              </div>
+            </div>
+            
+            <div class="candidates-list">
+              <div class="candidate-item"
+                *ngFor="let candidate of candidates"
+                [class.active]="selectedCandidate?.candidate_id === candidate.candidate_id"
+                (click)="selectCandidate(candidate)"
+                [@slideIn]>
+                <div class="candidate-info">
+                  <div class="candidate-header-row">
+                    <h4>{{ candidate.name }}</h4>
+                    <span class="rank-badge" *ngIf="candidate.rank_score !== undefined" [title]="'Match Score: ' + candidate.rank_score">
+                      ⭐ {{ candidate.rank_score }}
+                    </span>
+                  </div>
+                  <p>{{ candidate.role }}</p>
+                  <p class="experience">{{ candidate.experience }}</p>
+                </div>
+                <div class="skills-preview">
+                  <span *ngFor="let skill of candidate.skills | slice:0:2" class="skill-tag">{{ skill }}</span>
+                  <span *ngIf="candidate.skills.length > 2" class="skill-more">+{{ candidate.skills.length - 2 }}</span>
+                </div>
+              </div>
+              
+              <div class="empty-state" *ngIf="candidates.length === 0">
+                <p>No candidates found</p>
+                <button class="premium-btn btn-primary" (click)="setView('upload')">Upload Resume</button>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Detail Panel -->
+          <main class="detail-panel" *ngIf="selectedCandidate as candidate" [@fadeInOut]>
+            <div class="panel-header">
+              <div class="candidate-header">
+                <div class="avatar">{{ candidate.name.charAt(0).toUpperCase() }}</div>
+                <div class="candidate-meta">
+                  <h2>{{ candidate.name }}</h2>
+                  <p class="role-badge">{{ candidate.role }}</p>
+                </div>
+              </div>
+              <div class="panel-actions">
+                <button type="button" class="icon-btn" (click)="refreshRecommendations(candidate)" title="Refresh Job Matches">
+                  🔄
+                </button>
+                <button type="button" class="icon-btn danger" (click)="deleteCandidate(candidate)" title="Delete Profile">
+                  🗑️
+                </button>
+              </div>
+            </div>
+
+            <div class="panel-content">
+              <!-- Key Info Grid -->
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="info-label">Current Role</span>
+                  <p class="info-value">{{ candidate.role }}</p>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Experience</span>
+                  <p class="info-value">{{ candidate.experience }}</p>
+                </div>
+              </div>
+
+              <!-- Skills Section -->
+              <div class="section-block">
+                <h3 class="section-title">Technical Skills Extracted</h3>
+                <div class="skills-grid">
+                  <button type="button" class="skill-badge" *ngFor="let skill of candidate.skills" (click)="searchBySkill(skill)">
+                    {{ skill }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Recommendations Section -->
+              <div class="section-block">
+                <h3 class="section-title">Recommended Positions</h3>
+                <div class="recommendations">
+                  <div class="recommendation-item" *ngFor="let job of candidate.recommended_jobs">
+                    <span class="job-icon">💼</span>
+                    <span>{{ job }}</span>
+                  </div>
+                  <div class="empty-sub-state" *ngIf="candidate.recommended_jobs.length === 0">
+                    No recommendations found yet. Click 🔄 to regenerate.
+                  </div>
+                </div>
+              </div>
+
+              <!-- Job History Section -->
+              <div class="section-block" *ngIf="candidate.job_roles.length > 0">
+                <h3 class="section-title">Career Timeline</h3>
+                <div class="timeline">
+                  <div class="timeline-item" *ngFor="let role of candidate.job_roles">
+                    <div class="timeline-marker"></div>
+                    <p>{{ role }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
+
+          <main class="detail-panel empty-detail" *ngIf="!selectedCandidate" [@fadeInOut]>
+            <div class="panel-placeholder">
+              <h2>No candidate selected</h2>
+              <p>Select a profile from the database sidebar list or upload a resume to inspect full candidate metrics.</p>
+            </div>
+          </main>
+        </div>
+      </section>
+
+      <!-- ==================== VIEW 5: SEARCH HISTORY ==================== -->
+      <section class="viewport-section" *ngIf="activeView === 'history'" [@fadeInOut]>
+        <div class="action-card full-width-card">
+          <div class="card-header">
+            <div class="icon-circle">⏱️</div>
+            <div>
+              <h3>Search History</h3>
+              <p>Review and access previous searches. Each entry shows the query, timestamp, and matched candidates.</p>
+            </div>
+          </div>
+
+          <div class="history-actions" style="margin-bottom: 20px; display: flex; gap: 10px;">
+            <button type="button" class="premium-btn btn-ghost" (click)="loadSearchHistory()" [disabled]="isLoadingHistory">
+              <span *ngIf="!isLoadingHistory">🔄 Refresh History</span>
+              <span *ngIf="isLoadingHistory" class="loading">Loading...</span>
+            </button>
+            <button type="button" class="premium-btn btn-danger" (click)="clearAllSearchHistory()" [disabled]="searchHistory.length === 0 || isLoadingHistory">
+              🗑️ Clear All History
+            </button>
+          </div>
+
+          <div *ngIf="isLoadingHistory" style="text-align: center; padding: 40px;">
+            <p>Loading search history...</p>
+          </div>
+
+          <div *ngIf="!isLoadingHistory && searchHistory.length > 0" class="search-history-list">
+            <div class="history-item" *ngFor="let search of searchHistory; let i = index" [@slideIn]>
+              <div class="history-item-header">
+                <div class="history-item-info">
+                  <h4 class="history-query">{{ search.query }}</h4>
+                  <p class="history-timestamp">{{ search.searched_at | date: 'short' }}</p>
+                  <p class="history-results" *ngIf="search.candidates">Found {{ search.total_results }} candidates total • {{ search.candidates.length }} shown</p>
+                </div>
+                <button type="button" class="premium-btn btn-secondary" (click)="viewHistorySearch(search)">
+                  View Results ➜
+                </button>
+              </div>
+              <div class="history-item-candidates" *ngIf="search.candidates && search.candidates.length > 0">
+                <span *ngFor="let candidate of search.candidates | slice:0:5" class="history-candidate-tag" [title]="candidate.name">
+                  {{ candidate.name }} ({{ candidate.rank_score || 0 }})
+                </span>
+                <span *ngIf="search.candidates.length > 5" class="history-candidate-more">+{{ search.candidates.length - 5 }} more</span>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="!isLoadingHistory && searchHistory.length === 0" class="empty-search-state" style="text-align: center; padding: 60px 20px;">
+            <p style="font-size: 18px;">No search history found</p>
+            <small>Start making searches to build your history. Each search will be recorded here for quick reference.</small>
+            <button type="button" class="premium-btn btn-primary" (click)="setView('search')" style="margin-top: 20px;">
+              Start Searching
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="premium-footer">
+        <p>&copy; 2026 Candidate Search Platform. Premium Menu Dashboard Edition.</p>
+      </footer>
+    </div>
+  </div>
+</div>
