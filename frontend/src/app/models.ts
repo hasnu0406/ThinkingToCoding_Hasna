@@ -1,5 +1,5 @@
 export interface CandidateProfile {
-  candidate_id: string;
+  id: string;
   file_name?: string;
   name: string;
   age: string;
@@ -25,6 +25,7 @@ export interface SearchResponse {
 
 export interface SearchHistory {
   query: string;
+  title?: string;
   candidates: CandidateProfile[];
   total_results: number;
   filters_used: {

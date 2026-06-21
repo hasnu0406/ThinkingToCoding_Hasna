@@ -6,11 +6,12 @@ import { catchError, forkJoin, map, of } from 'rxjs';
 import { ApiService } from './api.service';
 import { CandidateProfile, SearchHistory } from './models';
 import { ThreeBgComponent } from './three-bg.component';
+import { ChatbotComponent } from './chatbot/chatbot.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ThreeBgComponent],
+  imports: [CommonModule, ReactiveFormsModule, ThreeBgComponent, ChatbotComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
   animations: [
@@ -43,7 +44,18 @@ export class AppComponent {
     query: ['', Validators.required]
   });
 
-  activeView: 'dashboard' | 'database' | 'upload' | 'search' | 'history' = 'dashboard';
+  readonly authForm = this.fb.group({
+    name: [''],
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(6)]]
+  });
+
+  authMode: 'login' | 'register' = 'login';
+  currentUser: { name: string; email: string; token: string } | null = null;
+  isAuthLoading = false;
+  authError = '';
+
+  activeView: 'dashboard' | 'database' | 'upload' | 'search' | 'history' | 'chatbot' = 'dashboard';
   candidates: CandidateProfile[] = [];
   selectedCandidate: CandidateProfile | null = null;
   isUploading = false;
@@ -75,7 +87,7 @@ export class AppComponent {
     return this.candidates.slice(0, 5);
   }
 
-  setView(view: 'dashboard' | 'database' | 'upload' | 'search' | 'history'): void {
+  setView(view: 'dashboard' | 'database' | 'upload' | 'search' | 'history' | 'chatbot'): void {
     this.activeView = view;
     if (view === 'history') {
       this.loadSearchHistory();
@@ -98,7 +110,100 @@ export class AppComponent {
   }
 
   constructor() {
-    this.loadCandidates();
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+      try {
+        this.currentUser = JSON.parse(savedUser);
+        this.loadCandidates();
+      } catch (e) {
+        localStorage.removeItem('currentUser');
+      }
+    }
+  }
+
+  toggleAuthMode(): void {
+    this.authMode = this.authMode === 'login' ? 'register' : 'login';
+    this.authError = '';
+    this.authForm.reset();
+
+    const nameControl = this.authForm.get('name');
+    if (this.authMode === 'register') {
+      nameControl?.setValidators([Validators.required, Validators.minLength(2)]);
+    } else {
+      nameControl?.clearValidators();
+    }
+    nameControl?.updateValueAndValidity();
+  }
+
+  handleAuthSubmit(): void {
+    if (this.authForm.invalid) {
+      return;
+    }
+    const { name, email, password } = this.authForm.value;
+    if (!email || !password) {
+      return;
+    }
+
+    this.isAuthLoading = true;
+    this.authError = '';
+
+    if (this.authMode === 'login') {
+      this.api.login(email, password).subscribe({
+        next: (response) => {
+          this.currentUser = {
+            name: response.name,
+            email: response.email,
+            token: response.access_token
+          };
+          localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+          this.isAuthLoading = false;
+          this.authForm.reset();
+          this.loadCandidates();
+        },
+        error: (err) => {
+          this.isAuthLoading = false;
+          this.authError = err?.error?.detail || 'Login failed. Please check your credentials.';
+        }
+      });
+    } else {
+      if (!name) {
+        this.isAuthLoading = false;
+        this.authError = 'Name is required for registration.';
+        return;
+      }
+      this.api.register(name, email, password).subscribe({
+        next: (regRes) => {
+          this.authMode = 'login';
+          this.isAuthLoading = false;
+          this.authError = '';
+          // Auto login
+          this.api.login(email, password).subscribe({
+            next: (response) => {
+              this.currentUser = {
+                name: response.name,
+                email: response.email,
+                token: response.access_token
+              };
+              localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+              this.loadCandidates();
+            }
+          });
+        },
+        error: (err) => {
+          this.isAuthLoading = false;
+          this.authError = err?.error?.detail || 'Registration failed. Email might already be registered.';
+        }
+      });
+    }
+  }
+
+  logout(): void {
+    localStorage.removeItem('currentUser');
+    this.currentUser = null;
+    this.candidates = [];
+    this.selectedCandidate = null;
+    this.searchHistory = [];
+    this.activeView = 'dashboard';
   }
 
   loadCandidates(): void {
@@ -192,7 +297,7 @@ export class AppComponent {
           return items;
         }, []);
         const newDuplicateCandidates = duplicateCandidates.filter(
-          (duplicate) => !this.candidates.some((candidate) => candidate.candidate_id === duplicate.candidate_id)
+          (duplicate) => !this.candidates.some((candidate) => candidate.id === duplicate.id)
         );
         if (newDuplicateCandidates.length > 0) {
           this.candidates = [...newDuplicateCandidates, ...this.candidates];
@@ -316,15 +421,15 @@ export class AppComponent {
   }
 
   refreshRecommendations(candidate: CandidateProfile): void {
-    this.api.refreshRecommendations(candidate.candidate_id).subscribe({
+    this.api.refreshRecommendations(candidate.id).subscribe({
       next: (response) => {
         this.candidates = this.candidates.map((item) =>
-          item.candidate_id === candidate.candidate_id
+          item.id === candidate.id
             ? { ...item, recommended_jobs: response.recommended_jobs }
             : item
         );
 
-        if (this.selectedCandidate?.candidate_id === candidate.candidate_id) {
+        if (this.selectedCandidate?.id === candidate.id) {
           this.selectedCandidate = {
             ...this.selectedCandidate,
             recommended_jobs: response.recommended_jobs
@@ -344,10 +449,10 @@ export class AppComponent {
       return;
     }
 
-    this.api.deleteResume(candidate.candidate_id).subscribe({
+    this.api.deleteResume(candidate.id).subscribe({
       next: () => {
-        this.candidates = this.candidates.filter((item) => item.candidate_id !== candidate.candidate_id);
-        if (this.selectedCandidate?.candidate_id === candidate.candidate_id) {
+        this.candidates = this.candidates.filter((item) => item.id !== candidate.id);
+        if (this.selectedCandidate?.id === candidate.id) {
           this.selectedCandidate = this.candidates[0] ?? null;
         }
       },
@@ -417,7 +522,7 @@ export class AppComponent {
       next: () => {
         this.searchHistory = [];
         this.messageType = 'notice';
-        this.errorMessage = 'Search history cleared successfully.';
+        this.errorMessage = 'history cleared successfully.';
       },
       error: (err) => {
         this.messageType = 'error';
@@ -425,6 +530,10 @@ export class AppComponent {
         console.error(err);
       }
     });
+  }
+
+  exportCSV(): void {
+    window.open('http://127.0.0.1:8000/export/candidates', '_blank');
   }
 
 }

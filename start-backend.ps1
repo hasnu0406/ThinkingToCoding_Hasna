@@ -7,5 +7,5 @@ if (-not (Test-Path $pythonExe)) {
     Write-Error "Python virtual environment not found at .venv\Scripts\python.exe"
 }
 
-Set-Location $projectRoot
+Set-Location (Join-Path $projectRoot "backend")
 & $pythonExe "main.py"

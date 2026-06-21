@@ -9,10 +9,22 @@ export class ApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = 'http://127.0.0.1:8000';
 
+  login(email: string, password: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/auth/login`, { email, password });
+  }
+
+  register(name: string, email: string, password: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/auth/register`, { name, email, password });
+  }
+
   getResumes(): Observable<CandidateProfile[]> {
     return this.http.get<CandidateProfile[] | { candidates: CandidateProfile[] }>(`${this.baseUrl}/resumes`).pipe(
       map((response) => Array.isArray(response) ? response : response.candidates)
     );
+  }
+
+  sendChatMessage(messages: { role: string; content: string }[]): Observable<{ reply: string; candidates: any[] }> {
+    return this.http.post<{ reply: string; candidates: any[] }>(`${this.baseUrl}/chat`, { messages });
   }
 
   uploadResume(file: File): Observable<CandidateProfile> {
@@ -29,8 +41,8 @@ export class ApiService {
     return this.http.post<any>(`${this.baseUrl}/search/bot`, { query, top_n: topN });
   }
 
-  refreshRecommendations(candidateId: string): Observable<{ candidate_id: string; recommended_jobs: string[] }> {
-    return this.http.get<{ candidate_id: string; recommended_jobs: string[] }>(
+  refreshRecommendations(candidateId: string): Observable<{ id: string; recommended_jobs: string[] }> {
+    return this.http.get<{ id: string; recommended_jobs: string[] }>(
       `${this.baseUrl}/resume/${candidateId}/recommend`
     );
   }

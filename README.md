@@ -49,5 +49,3 @@ npm.cmd start
 - The backend listens on `http://127.0.0.1:8000`
 - The frontend calls the backend at `http://127.0.0.1:8000`
 - MongoDB should be running locally at `mongodb://localhost:27017/`
-- PowerShell `.ps1` launchers may be blocked by your execution policy, so the `.cmd` launchers are the safest option on Windows.
-- Angular 18 does not support Node `24.x`. Use Node `18.x`, `20.x`, or `22.x` for the frontend.

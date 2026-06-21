@@ -9,5 +9,5 @@ if not exist "%PYTHON_EXE%" (
   exit /b 1
 )
 
-cd /d "%PROJECT_ROOT%"
+cd /d "%PROJECT_ROOT%backend"
 "%PYTHON_EXE%" main.py

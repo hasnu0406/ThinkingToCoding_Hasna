@@ -1,0 +1,115 @@
+<div class="chat-wrapper">
+
+  <!-- Chat Header -->
+  <div class="chat-header">
+    <div class="bot-identity">
+      <div class="bot-avatar-small">🤖</div>
+      <div>
+        <h3>SearchBot</h3>
+        <span class="status-dot"></span>
+        <span class="status-text">Powered by AI Intelligent Search Engine</span>
+      </div>
+    </div>
+    <button class="clear-btn" (click)="clearChat()">🗑️ Clear</button>
+  </div>
+
+  <!-- Messages Area -->
+  <div class="messages-area" #messagesContainer>
+
+    <ng-container *ngFor="let msg of messages">
+
+      <!-- User message -->
+      <div class="message-row user-row" *ngIf="msg.role === 'user'">
+        <div class="bubble user-bubble">
+          <div class="bubble-content" [innerHTML]="formatContent(msg.content)"></div>
+          <span class="timestamp">{{ msg.timestamp | date:'shortTime' }}</span>
+        </div>
+        <div class="msg-avatar user-msg-avatar">👤</div>
+      </div>
+
+      <!-- Bot message: text + optional cards -->
+      <div class="bot-message-group" *ngIf="msg.role === 'assistant'">
+
+        <!-- Text bubble -->
+        <div class="message-row bot-row">
+          <div class="msg-avatar bot-msg-avatar">🤖</div>
+          <div class="bubble bot-bubble">
+            <div class="bubble-content" [innerHTML]="formatContent(msg.content)"></div>
+            <span class="timestamp">{{ msg.timestamp | date:'shortTime' }}</span>
+          </div>
+        </div>
+
+        <!-- Candidate Cards (only if results exist) -->
+        <div class="candidate-cards-area" *ngIf="msg.candidates && msg.candidates.length > 0">
+          <p class="cards-label">🔍 Matched Candidates ({{ msg.candidates.length }})</p>
+          <div class="cards-scroll">
+            <div
+              class="candidate-card"
+              *ngFor="let c of msg.candidates"
+              (click)="openCandidate(c)"
+              title="Click to open full profile"
+            >
+              <div class="card-top">
+                <div class="card-avatar">{{ getInitial(c.name) }}</div>
+                <div class="card-meta">
+                  <h4>{{ c.name }}</h4>
+                  <p class="card-role">{{ c.role }}</p>
+                </div>
+                <span class="card-score" *ngIf="c.rank_score !== undefined">⭐ {{ c.rank_score }}</span>
+              </div>
+              <p class="card-exp">📅 {{ c.experience }}</p>
+              <div class="card-skills">
+                <span class="skill-chip" *ngFor="let s of c.skills | slice:0:4">{{ s }}</span>
+                <span class="skill-more" *ngIf="c.skills.length > 4">+{{ c.skills.length - 4 }}</span>
+              </div>
+              <div class="card-footer">
+                <span>View Full Profile ➜</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </ng-container>
+
+    <!-- Robot Thinking Animation -->
+    <div class="thinking-row" *ngIf="isThinking">
+      <div class="robot-assistant thinking">
+        <div class="thought-bubbles">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="robot-antenna"></div>
+        <div class="robot-head">
+          <div class="robot-eye"></div>
+          <div class="robot-eye"></div>
+          <div class="robot-mouth"></div>
+        </div>
+        <div class="robot-body">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="robot-scan"></div>
+      </div>
+      <div class="thinking-label">SearchBot is analysing candidates...</div>
+    </div>
+
+  </div>
+
+  <!-- Input Area -->
+  <div class="input-area">
+    <textarea
+      class="chat-input"
+      [(ngModel)]="inputText"
+      (keydown)="onKeyDown($event)"
+      placeholder="Ask anything... e.g. 'Find me a Python developer with 2 years experience'"
+      rows="1"
+      [disabled]="isThinking"
+    ></textarea>
+    <button class="send-btn" (click)="sendMessage()" [disabled]="!inputText.trim() || isThinking">
+      <span *ngIf="!isThinking">➤</span>
+      <span *ngIf="isThinking" class="btn-spinner"></span>
+    </button>
+  </div>
+  <p class="input-hint">Press <kbd>Enter</kbd> to send &nbsp;·&nbsp; <kbd>Shift+Enter</kbd> for new line</p>
+
+</div>

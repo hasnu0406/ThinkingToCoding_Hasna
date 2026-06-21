@@ -1,0 +1,68 @@
+import datetime
+from typing import Any
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+# Import AI/groq status to expose in health check
+from ai import groq_available
+
+# Import Routers
+from routers import search
+from routers import resume
+from routers import export
+from routers import chat
+from routers import auth
+
+
+app = FastAPI(
+    title="Candidate Search Platform API",
+    version="6.0.0",
+    description=(
+        "Backend business logic for resume parsing, candidate extraction, "
+        "job recommendation, search history, and export."
+    ),
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:4200",
+        "http://127.0.0.1:4200",
+        "http://localhost:4201",
+        "http://127.0.0.1:4201",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# Include Routers
+app.include_router(auth.router)
+app.include_router(search.router)
+app.include_router(resume.router)
+app.include_router(resume.resumes_router)
+app.include_router(export.router)
+app.include_router(chat.router)
+
+
+# ─── System Routes ───────────────────────────────────────────────────────────
+
+@app.get("/")
+def home() -> dict[str, str]:
+    return {"message": "Candidate Search Platform API v6 is running."}
+
+
+@app.get("/health")
+def health() -> dict[str, Any]:
+    return {
+        "status": "ok",
+        "groq_available": groq_available,
+        "timestamp": datetime.datetime.utcnow().isoformat(),
+    }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8000)
