@@ -524,51 +524,50 @@
             <div class="icon-circle">⏱️</div>
             <div>
               <h3>Chat History</h3>
-              <p>Review and access previous chat sessions. Each entry shows your chat query, timestamp, and matched candidates.</p>
+              <p>Review and access previous chat sessions. Each entry stores the entire conversation list and candidates.</p>
             </div>
           </div>
-
+ 
           <div class="history-actions" style="margin-bottom: 20px; display: flex; gap: 10px;">
             <button type="button" class="premium-btn btn-ghost" (click)="loadSearchHistory()" [disabled]="isLoadingHistory">
               <span *ngIf="!isLoadingHistory">🔄 Refresh History</span>
               <span *ngIf="isLoadingHistory" class="loading">Loading...</span>
             </button>
-            <button type="button" class="premium-btn btn-danger" (click)="clearAllSearchHistory()" [disabled]="searchHistory.length === 0 || isLoadingHistory">
-              🗑️ Clear All History
+            <button type="button" class="premium-btn btn-danger" (click)="clearAllSearchHistory()" [disabled]="chatSessions.length === 0 || isLoadingHistory">
+              🗑️ Clear All Sessions
             </button>
           </div>
-
+ 
           <div *ngIf="isLoadingHistory" style="text-align: center; padding: 40px;">
-            <p>Loading search history...</p>
+            <p>Loading chat history...</p>
           </div>
-
-          <div *ngIf="!isLoadingHistory && searchHistory.length > 0" class="search-history-list">
-            <div class="history-item" *ngFor="let search of searchHistory; let i = index" [@slideIn]>
+ 
+          <div *ngIf="!isLoadingHistory && chatSessions.length > 0" class="search-history-list">
+            <div class="history-item" *ngFor="let session of chatSessions; let i = index" [@slideIn]>
               <div class="history-item-header">
                 <div class="history-item-info">
-                  <h4 class="history-query">{{ search.title || search.query }}</h4>
-                  <p class="history-raw-query" *ngIf="search.title && search.title !== search.query">"{{ search.query }}"</p>
-                  <p class="history-timestamp">{{ search.searched_at | date: 'short' }}</p>
-                  <p class="history-results" *ngIf="search.candidates">Found {{ search.total_results }} candidates total • {{ search.candidates.length }} shown</p>
+                  <h4 class="history-query">{{ session.title }}</h4>
+                  <p class="history-raw-query" *ngIf="session.preview">"{{ session.preview }}"</p>
+                  <p class="history-timestamp">Last active: {{ session.updated_at | date: 'short' }}</p>
+                  <p class="history-results" *ngIf="session.messages">Contains {{ session.messages.length }} messages</p>
                 </div>
-                <button type="button" class="premium-btn btn-secondary" (click)="viewHistorySearch(search)">
-                  View Results ➜
-                </button>
-              </div>
-              <div class="history-item-candidates" *ngIf="search.candidates && search.candidates.length > 0">
-                <span *ngFor="let candidate of search.candidates | slice:0:5" class="history-candidate-tag" [title]="candidate.name">
-                  {{ candidate.name }} ({{ candidate.rank_score || 0 }})
-                </span>
-                <span *ngIf="search.candidates.length > 5" class="history-candidate-more">+{{ search.candidates.length - 5 }} more</span>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                  <button type="button" class="premium-btn btn-secondary" (click)="viewHistorySearch(session)">
+                    Resume Chat ➜
+                  </button>
+                  <button type="button" class="premium-btn btn-danger" style="padding: 10px 14px;" (click)="deleteChatSession(session.id)" title="Delete session">
+                    🗑️
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-
-          <div *ngIf="!isLoadingHistory && searchHistory.length === 0" class="empty-search-state" style="text-align: center; padding: 60px 20px;">
-            <p style="font-size: 18px;">No search history found</p>
-            <small>Start making searches to build your history. Each search will be recorded here for quick reference.</small>
-            <button type="button" class="premium-btn btn-primary" (click)="setView('search')" style="margin-top: 20px;">
-              Start Searching
+ 
+          <div *ngIf="!isLoadingHistory && chatSessions.length === 0" class="empty-search-state" style="text-align: center; padding: 60px 20px;">
+            <p style="font-size: 18px;">No chat history found</p>
+            <small>Start chatting with SearchBot to build your history. Each conversation will be saved here for quick reference.</small>
+            <button type="button" class="premium-btn btn-primary" (click)="setView('chatbot')" style="margin-top: 20px;">
+              Start Chatting
             </button>
           </div>
         </div>
@@ -584,7 +583,12 @@
               <p>Chat naturally with the AI to find the best candidates. Just describe what you need in plain English!</p>
             </div>
           </div>
-          <app-chatbot (candidateSelected)="inspectCandidate($event)"></app-chatbot>
+          <app-chatbot 
+            [sessionId]="chatSessionId" 
+            [userEmail]="currentUser.email" 
+            (sessionCreated)="chatSessionId = $event"
+            (candidateSelected)="inspectCandidate($event)"
+          ></app-chatbot>
         </div>
       </section>
 

@@ -66,6 +66,9 @@ export class AppComponent {
   selectedFiles: File[] = [];
   hasActiveSearch = false;
   searchHistory: SearchHistory[] = [];
+  chatSessions: any[] = [];
+  chatSessionId: string | null = null;
+
 
   get totalUniqueSkillsCount(): number {
     const allSkills = this.candidates.flatMap(c => c.skills || []);
@@ -203,6 +206,8 @@ export class AppComponent {
     this.candidates = [];
     this.selectedCandidate = null;
     this.searchHistory = [];
+    this.chatSessions = [];
+    this.chatSessionId = null;
     this.activeView = 'dashboard';
   }
 
@@ -469,68 +474,73 @@ export class AppComponent {
     this.errorMessage = '';
     this.messageType = 'error';
 
-    this.api.getSearchHistory(50).subscribe({
-      next: (history) => {
-        this.searchHistory = history;
+    if (!this.currentUser) {
+      this.isLoadingHistory = false;
+      return;
+    }
+
+    this.api.getChatSessions(this.currentUser.email).subscribe({
+      next: (sessions) => {
+        this.chatSessions = sessions;
         this.isLoadingHistory = false;
       },
       error: (err) => {
         this.messageType = 'error';
-        this.errorMessage = 'Failed to load search history.';
+        this.errorMessage = 'Failed to load chat history.';
         this.isLoadingHistory = false;
         console.error(err);
       }
     });
   }
 
-  viewHistorySearch(search: SearchHistory): void {
-    try {
-      if (!search || !search.candidates) {
-        this.messageType = 'error';
-        this.errorMessage = 'Search history data is incomplete. Unable to load results.';
-        return;
-      }
-      
-      this.candidates = search.candidates.map(c => ({
-        ...c,
-        rank_score: c.rank_score || 0
-      }));
-      
-      if (this.candidates.length > 0) {
-        this.selectCandidate(this.candidates[0]);
-      } else {
-        this.selectedCandidate = null;
-        this.messageType = 'notice';
-        this.errorMessage = 'No candidates in this search result.';
-      }
-      
-      this.searchForm.patchValue({ query: search.query });
-      this.activeView = 'database';
-    } catch (err) {
-      this.messageType = 'error';
-      this.errorMessage = 'Error loading search results.';
-      console.error(err);
+  viewHistorySearch(session: any): void {
+    this.chatSessionId = session.id;
+    this.activeView = 'chatbot';
+  }
+
+  deleteChatSession(sessionId: string): void {
+    if (!confirm('Are you sure you want to delete this chat session?')) {
+      return;
     }
+    this.api.deleteChatSession(sessionId).subscribe({
+      next: () => {
+        this.chatSessions = this.chatSessions.filter(s => s.id !== sessionId);
+        if (this.chatSessionId === sessionId) {
+          this.chatSessionId = null;
+        }
+      },
+      error: (err) => {
+        this.messageType = 'error';
+        this.errorMessage = 'Failed to delete chat session.';
+        console.error(err);
+      }
+    });
   }
 
   clearAllSearchHistory(): void {
-    if (!confirm('Are you sure you want to clear all search history? This action cannot be undone.')) {
+    if (!confirm('Are you sure you want to clear all chat sessions? This action cannot be undone.')) {
       return;
     }
+    if (!this.currentUser) return;
+    this.isLoadingHistory = true;
 
-    this.api.clearSearchHistory().subscribe({
+    this.api.clearChatSessions(this.currentUser.email).subscribe({
       next: () => {
-        this.searchHistory = [];
+        this.chatSessions = [];
+        this.chatSessionId = null;
+        this.isLoadingHistory = false;
         this.messageType = 'notice';
         this.errorMessage = 'history cleared successfully.';
       },
       error: (err) => {
         this.messageType = 'error';
-        this.errorMessage = 'Failed to clear search history.';
+        this.errorMessage = 'Failed to clear chat sessions.';
+        this.isLoadingHistory = false;
         console.error(err);
       }
     });
   }
+
 
   exportCSV(): void {
     window.open('http://127.0.0.1:8000/export/candidates', '_blank');

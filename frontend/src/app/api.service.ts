@@ -23,9 +23,30 @@ export class ApiService {
     );
   }
 
-  sendChatMessage(messages: { role: string; content: string }[]): Observable<{ reply: string; candidates: any[] }> {
-    return this.http.post<{ reply: string; candidates: any[] }>(`${this.baseUrl}/chat`, { messages });
+  sendChatMessage(sessionId: string | null, email: string, message: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/chat`, {
+      session_id: sessionId,
+      user_email: email,
+      message: message
+    });
   }
+
+  getChatSessions(email: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/chat/sessions?user_email=${encodeURIComponent(email)}`);
+  }
+
+  getChatSession(sessionId: string): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/chat/sessions/${sessionId}`);
+  }
+
+  deleteChatSession(sessionId: string): Observable<any> {
+    return this.http.delete<any>(`${this.baseUrl}/chat/sessions/${sessionId}`);
+  }
+
+  clearChatSessions(email: string): Observable<any> {
+    return this.http.delete<any>(`${this.baseUrl}/chat/sessions?user_email=${encodeURIComponent(email)}`);
+  }
+
 
   uploadResume(file: File): Observable<CandidateProfile> {
     const formData = new FormData();

@@ -9,7 +9,12 @@ def _clean_json_payload(raw_text: str) -> str:
     cleaned = raw_text.strip()
     cleaned = re.sub(r"^```[a-zA-Z0-9_-]*\n?", "", cleaned)
     cleaned = re.sub(r"\n?```$", "", cleaned)
-    return cleaned.strip()
+    cleaned = cleaned.strip()
+    # Remove trailing commas inside arrays and objects to prevent JSON decode errors
+    cleaned = re.sub(r",\s*\]", "]", cleaned)
+    cleaned = re.sub(r",\s*\}", "}", cleaned)
+    return cleaned
+
 
 def _safe_profile(payload: dict[str, Any] | None) -> dict[str, Any]:
     profile = {**DEFAULT_PROFILE}

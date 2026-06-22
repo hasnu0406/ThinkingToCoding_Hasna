@@ -44,18 +44,71 @@ class AIClientManager:
                 "model": "meta-llama/llama-3.3-70b-instruct"
             })
 
+        # Run key validation synchronously on startup to clean the pool immediately
+        self._validate_clients()
+
+    def _validate_clients(self) -> None:
+        """Verify API keys synchronously on startup to filter out invalid providers."""
+        valid_clients = []
+        for c_info in self._clients:
+            client = c_info["client"]
+            model = c_info["model"]
+            provider = c_info["provider"]
+            
+            if provider == "groq":
+                try:
+                    # Test key validity
+                    client.chat.completions.create(
+                        model=model,
+                        temperature=0.1,
+                        max_tokens=2,
+                        messages=[{"role": "user", "content": "ping"}],
+                    )
+                    valid_clients.append(c_info)
+                except Exception as exc:
+                    error_str = str(exc).lower()
+                    is_auth_error = "401" in error_str or "api_key" in error_str or "unauthorized" in error_str or "invalid api key" in error_str
+                    if is_auth_error:
+                        print(f"[KeyManager Startup] Disabled invalid Groq key on initialization.")
+                    else:
+                        valid_clients.append(c_info)
+            else:
+                valid_clients.append(c_info)
+                
+        with self._lock:
+            self._clients = valid_clients
+            if len(self._clients) > 0:
+                self._index = self._index % len(self._clients)
+            else:
+                self._index = 0
+
     @property
     def available(self) -> bool:
         return len(self._clients) > 0
 
-    def _current_client(self) -> dict:
+    def _current_client(self) -> dict | None:
         with self._lock:
+            if not self._clients:
+                return None
             return self._clients[self._index % len(self._clients)]
 
     def _rotate(self) -> None:
         """Move to the next key/provider in the pool."""
         with self._lock:
-            self._index = (self._index + 1) % len(self._clients)
+            if len(self._clients) > 0:
+                self._index = (self._index + 1) % len(self._clients)
+
+    def _disable_current_client(self) -> None:
+        """Remove the current client from the pool due to authentication failure."""
+        with self._lock:
+            if len(self._clients) > 0:
+                idx = self._index % len(self._clients)
+                removed = self._clients.pop(idx)
+                print(f"[KeyManager] Disabled invalid provider/key: {removed['provider']}")
+                if len(self._clients) > 0:
+                    self._index = self._index % len(self._clients)
+                else:
+                    self._index = 0
 
     def call_json(self, prompt: str, *, fallback: Any) -> Any:
         """
@@ -67,6 +120,8 @@ class AIClientManager:
 
         for attempt in range(len(self._clients)):
             client_info = self._current_client()
+            if not client_info:
+                break
             client = client_info["client"]
             model = client_info["model"]
             provider = client_info["provider"]
@@ -78,16 +133,26 @@ class AIClientManager:
                     max_tokens=1200,
                     messages=[{"role": "user", "content": prompt}],
                 )
+                raw_content = (completion.choices[0].message.content or "").strip()
+                if not raw_content:
+                    print(f"[KeyManager] {provider} returned empty content. Rotating.")
+                    self._rotate()
+                    continue
                 return json.loads(
-                    _clean_json_payload(completion.choices[0].message.content or "")
+                    _clean_json_payload(raw_content)
                 )
             except Exception as exc:
                 error_str = str(exc).lower()
-                if "rate" in error_str or "429" in error_str or "quota" in error_str:
+                is_auth_error = "401" in error_str or "api_key" in error_str or "unauthorized" in error_str or "invalid api key" in error_str
+                
+                if is_auth_error:
+                    print(f"[KeyManager] {provider} authentication failed (401). Disabling key.")
+                    self._disable_current_client()
+                elif "rate" in error_str or "429" in error_str or "quota" in error_str:
                     print(f"[KeyManager] {provider} rate-limited. Rotating.")
                     self._rotate()
                 else:
-                    print(f"[KeyManager] {provider} JSON request failed: {exc}")
+                    print(f"[KeyManager] {provider} JSON request failed: {exc}. Rotating.")
                     self._rotate()
 
         print("[KeyManager] All providers exhausted. Returning fallback.")
@@ -103,6 +168,8 @@ class AIClientManager:
 
         for attempt in range(len(self._clients)):
             client_info = self._current_client()
+            if not client_info:
+                break
             client = client_info["client"]
             model = client_info["model"]
             provider = client_info["provider"]
@@ -114,14 +181,24 @@ class AIClientManager:
                     max_tokens=1024,
                     messages=messages,
                 )
-                return completion.choices[0].message.content or ""
+                raw_content = (completion.choices[0].message.content or "").strip()
+                if not raw_content:
+                    print(f"[KeyManager] {provider} returned empty text content. Rotating.")
+                    self._rotate()
+                    continue
+                return raw_content
             except Exception as exc:
                 error_str = str(exc).lower()
-                if "rate" in error_str or "429" in error_str or "quota" in error_str:
+                is_auth_error = "401" in error_str or "api_key" in error_str or "unauthorized" in error_str or "invalid api key" in error_str
+                
+                if is_auth_error:
+                    print(f"[KeyManager] {provider} authentication failed (401). Disabling key.")
+                    self._disable_current_client()
+                elif "rate" in error_str or "429" in error_str or "quota" in error_str:
                     print(f"[KeyManager] {provider} rate-limited. Rotating.")
                     self._rotate()
                 else:
-                    print(f"[KeyManager] {provider} text call failed: {exc}")
+                    print(f"[KeyManager] {provider} text call failed: {exc}. Rotating.")
                     self._rotate()
 
         return ""
@@ -167,12 +244,37 @@ def ai_recommend_jobs(profile: dict[str, Any]) -> list[str]:
     return ([str(i) for i in response][:5] or fallback) if isinstance(response, list) else fallback
 
 
-def ai_parse_query(query: str) -> dict[str, Any]:
+def ai_parse_query(query: str, history: list[dict] = None) -> dict[str, Any]:
     """Use AI to intelligently parse natural language queries into structured filters."""
-    fallback = parse_query(query)
-    response = call_groq_json(
-        f"{QUERY_PARSING_PROMPT}\n\nUser query: {query}", fallback=fallback
-    )
+    raw_fallback = parse_query(query)
+    fallback = {
+        "skills": raw_fallback.get("skills", []),
+        "experience": raw_fallback.get("experience"),
+        "min_experience": raw_fallback.get("experience"),
+        "max_experience": None,
+        "role_keyword": None,
+    }
+    
+    context_str = ""
+    if history:
+        context_msgs = []
+        for msg in history[-6:]:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            context_msgs.append(f"{role.capitalize()}: {content}")
+        context_str = "Conversation history for context:\n" + "\n".join(context_msgs) + "\n\n"
+
+    prompt = f"""{QUERY_PARSING_PROMPT}
+
+Conversation Context Rules:
+- If the user query is a conversational follow-up/continuation (e.g. 'retry', 'yes', 'show more', 'any others', 'refresh', 'none of these') or refers to candidates/filters from the history without specifying new ones, you MUST retain the filters (skills, experience, role_keyword) from the previous turns.
+- If the user query modifies the previous search criteria (e.g. 'with 5 years experience', 'only python developers', 'actually react developer'), update or add those specific filters while keeping the rest of the context from previous turns.
+
+{context_str}User query to parse: "{query}"
+
+Return ONLY the JSON matching the schema."""
+
+    response = call_groq_json(prompt, fallback=fallback)
     if isinstance(response, dict):
         skills = response.get("skills", [])
         min_exp = response.get("min_experience_years")
@@ -188,7 +290,11 @@ def ai_parse_query(query: str) -> dict[str, Any]:
     return fallback
 
 
-def get_highly_related_roles(keyword: str, candidate_roles: list[str]) -> list[str]:
+
+from functools import lru_cache
+
+@lru_cache(maxsize=128)
+def get_highly_related_roles(keyword: str, candidate_roles: tuple[str, ...]) -> list[str]:
     if not keyword or not candidate_roles:
         return []
 

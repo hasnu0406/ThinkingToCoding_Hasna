@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, AfterViewChecked, Output, EventEmitter } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewChecked, Output, EventEmitter, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../api.service';
@@ -18,23 +18,56 @@ interface ChatMessage {
   templateUrl: './chatbot.component.html',
   styleUrls: ['./chatbot.component.css']
 })
-export class ChatbotComponent implements AfterViewChecked {
+export class ChatbotComponent implements AfterViewChecked, OnChanges {
   @ViewChild('messagesContainer') messagesContainer!: ElementRef;
   @Output() candidateSelected = new EventEmitter<CandidateProfile>();
+  
+  @Input() sessionId: string | null = null;
+  @Input() userEmail: string = '';
+  @Output() sessionCreated = new EventEmitter<string>();
 
-  messages: ChatMessage[] = [
-    {
-      role: 'assistant',
-      content: "👋 Hi! I'm **SearchBot**, your AI recruitment assistant.\n\nI use the same AI ranking engine as the Intelligent Search. Just ask me naturally:\n\n• *\"Find me a Python developer with 2 years experience\"*\n• *\"Who are the best React candidates?\"*\n• *\"Show me full stack developers\"*",
-      timestamp: new Date()
-    }
-  ];
-
+  messages: ChatMessage[] = [];
   inputText = '';
   isThinking = false;
   private shouldScroll = false;
 
   constructor(private api: ApiService) {}
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['sessionId']) {
+      const newSessionId = changes['sessionId'].currentValue;
+      if (newSessionId) {
+        this.loadSession(newSessionId);
+      } else {
+        this.messages = [];
+      }
+    }
+  }
+
+  loadSession(sessionId: string): void {
+    this.isThinking = true;
+    this.api.getChatSession(sessionId).subscribe({
+      next: (session) => {
+        this.messages = (session.messages || []).map((m: any) => ({
+          role: m.role,
+          content: m.content,
+          candidates: m.candidates,
+          timestamp: m.timestamp ? new Date(m.timestamp) : new Date()
+        }));
+        this.isThinking = false;
+        this.shouldScroll = true;
+      },
+      error: (err) => {
+        console.error('Failed to load session:', err);
+        this.isThinking = false;
+      }
+    });
+  }
+
+  selectSuggestion(prompt: string): void {
+    this.inputText = prompt;
+    this.sendMessage();
+  }
 
   ngAfterViewChecked(): void {
     if (this.shouldScroll) {
@@ -59,19 +92,24 @@ export class ChatbotComponent implements AfterViewChecked {
     this.isThinking = true;
     this.shouldScroll = true;
 
-    // Build conversation history (text only — no candidate arrays)
-    const history = this.messages.map(m => ({ role: m.role, content: m.content }));
-
-    this.api.sendChatMessage(history).subscribe({
+    this.api.sendChatMessage(this.sessionId, this.userEmail, text).subscribe({
       next: (res) => {
+        const wasNewSession = !this.sessionId;
+        this.sessionId = res.session_id;
+        
         this.messages.push({
           role: 'assistant',
           content: res.reply,
           candidates: res.candidates || [],
           timestamp: new Date()
         });
+        
         this.isThinking = false;
         this.shouldScroll = true;
+
+        if (wasNewSession) {
+          this.sessionCreated.emit(res.session_id);
+        }
       },
       error: () => {
         this.messages.push({
@@ -93,7 +131,9 @@ export class ChatbotComponent implements AfterViewChecked {
   }
 
   clearChat(): void {
-    this.messages = [this.messages[0]];
+    this.messages = [];
+    this.sessionId = null;
+    this.sessionCreated.emit('');
   }
 
   openCandidate(candidate: CandidateProfile): void {

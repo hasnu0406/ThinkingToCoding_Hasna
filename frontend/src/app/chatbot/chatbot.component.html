@@ -10,11 +10,54 @@
         <span class="status-text">Powered by AI Intelligent Search Engine</span>
       </div>
     </div>
-    <button class="clear-btn" (click)="clearChat()">🗑️ Clear</button>
+    <button class="clear-btn" (click)="clearChat()">➕ New Chat</button>
   </div>
 
   <!-- Messages Area -->
   <div class="messages-area" #messagesContainer>
+
+    <!-- Welcome Dashboard (when chat history is empty) -->
+    <div class="welcome-dashboard" *ngIf="messages.length === 0">
+      <div class="welcome-header">
+        <div class="welcome-logo">🤖</div>
+        <h2>How can I help you find talent today?</h2>
+        <p>Ask natural-language questions to search, match, and evaluate candidate profiles in your database.</p>
+      </div>
+
+      <div class="suggestion-grid">
+        <div class="suggestion-card" (click)="selectSuggestion('Find me a Python developer with 3 years experience')">
+          <div class="suggestion-icon">🐍</div>
+          <div class="suggestion-content">
+            <h4>Find Python Devs</h4>
+            <p>"Find me a Python developer with 3 years experience"</p>
+          </div>
+        </div>
+
+        <div class="suggestion-card" (click)="selectSuggestion('Who are the best React candidates in my database?')">
+          <div class="suggestion-icon">⚛️</div>
+          <div class="suggestion-content">
+            <h4>React Candidates</h4>
+            <p>"Who are the best React candidates in my database?"</p>
+          </div>
+        </div>
+
+        <div class="suggestion-card" (click)="selectSuggestion('Show me senior full stack developers')">
+          <div class="suggestion-icon">💻</div>
+          <div class="suggestion-content">
+            <h4>Full Stack Search</h4>
+            <p>"Show me senior full stack developers"</p>
+          </div>
+        </div>
+
+        <div class="suggestion-card" (click)="selectSuggestion('Filter candidates with at least 5 years experience')">
+          <div class="suggestion-icon">📅</div>
+          <div class="suggestion-content">
+            <h4>Match by Experience</h4>
+            <p>"Filter candidates with at least 5 years experience"</p>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <ng-container *ngFor="let msg of messages">
 

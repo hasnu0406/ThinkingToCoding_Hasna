@@ -3,7 +3,7 @@ from typing import Any
 # pyrefly: ignore [missing-import]
 from bson import ObjectId
 # pyrefly: ignore [missing-import]
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, BackgroundTasks
 
 from models import SearchRequest, BotSearchRequest
 from database import resume_collection, search_history_collection
@@ -11,23 +11,46 @@ from ai import ai_parse_query, ai_generate_query_title
 from logic import parse_query, rank_candidates
 from utils import _serialize
 
+def save_search_history_bg(query: str, filters: dict, total_results: int, candidates: list):
+    title = ai_generate_query_title(query)
+    search_history_collection.insert_one({
+        "query": query,
+        "title": title,
+        "filters_used": filters,
+        "total_results": total_results,
+        "candidates": candidates,
+        "searched_at": datetime.datetime.utcnow(),
+    })
+
+def save_bot_search_history_bg(query: str, filters: dict, total_results: int, returned_results: int, candidates: list):
+    title = ai_generate_query_title(query)
+    search_history_collection.insert_one({
+        "query": query,
+        "title": title,
+        "query_type": "bot",
+        "filters_used": filters,
+        "total_results": total_results,
+        "returned_results": returned_results,
+        "candidates": candidates,
+        "searched_at": datetime.datetime.utcnow(),
+    })
+
 router = APIRouter(prefix="/search", tags=["Search"])
 
 @router.post("")
-def search(data: SearchRequest) -> dict[str, Any]:
+def search(data: SearchRequest, background_tasks: BackgroundTasks) -> dict[str, Any]:
     filters = parse_query(data.query)
     documents = [_serialize(d) for d in resume_collection.find({})]
     ranked_results = rank_candidates(documents, filters)
 
-    # Save to search history
-    search_history_collection.insert_one({
-        "query": data.query,
-        "title": ai_generate_query_title(data.query),
-        "filters_used": filters,
-        "total_results": len(ranked_results),
-        "candidates": ranked_results,
-        "searched_at": datetime.datetime.utcnow(),
-    })
+    # Save to search history in background
+    background_tasks.add_task(
+        save_search_history_bg,
+        data.query,
+        filters,
+        len(ranked_results),
+        ranked_results
+    )
 
     return {
         "total_results": len(ranked_results),
@@ -37,7 +60,7 @@ def search(data: SearchRequest) -> dict[str, Any]:
 
 
 @router.post("/bot")
-def bot_search(data: BotSearchRequest) -> dict[str, Any]:
+def bot_search(data: BotSearchRequest, background_tasks: BackgroundTasks) -> dict[str, Any]:
     """AI-powered bot-style candidate search with natural language query parsing."""
     # Use AI to parse the query
     filters = ai_parse_query(data.query)
@@ -51,17 +74,15 @@ def bot_search(data: BotSearchRequest) -> dict[str, Any]:
     # Return top N results
     top_results = ranked_results[:data.top_n]
     
-    # Save to search history
-    search_history_collection.insert_one({
-        "query": data.query,
-        "title": ai_generate_query_title(data.query),
-        "query_type": "bot",
-        "filters_used": filters,
-        "total_results": len(ranked_results),
-        "returned_results": len(top_results),
-        "candidates": top_results,
-        "searched_at": datetime.datetime.utcnow(),
-    })
+    # Save to search history in background
+    background_tasks.add_task(
+        save_bot_search_history_bg,
+        data.query,
+        filters,
+        len(ranked_results),
+        len(top_results),
+        top_results
+    )
 
     return {
         "query": data.query,

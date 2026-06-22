@@ -42,7 +42,7 @@ def rank_candidates(candidates: list[dict[str, Any]], filters: dict[str, Any]) -
     role_keyword = filters.get("role_keyword")
     highly_related_roles = []
     if role_keyword:
-        all_roles = list(set(c.get("role", "").strip() for c in candidates if c.get("role", "").strip()))
+        all_roles = tuple(sorted(list(set(c.get("role", "").strip() for c in candidates if c.get("role", "").strip()))))
         highly_related_roles = [r.lower().strip() for r in get_highly_related_roles(role_keyword, all_roles)]
     
     for candidate in candidates:

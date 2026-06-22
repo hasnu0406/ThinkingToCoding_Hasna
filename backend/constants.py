@@ -53,11 +53,11 @@ Rules:
 - skills: Extract technical skills mentioned (lowercase, deduplicated). Check against: python, fastapi, django, flask, angular, react, vue, mongodb, sql, postgresql, mysql, docker, aws, azure, kubernetes, java, node, typescript, javascript, golang, rust, c++, machine learning, deep learning, tensorflow, pytorch
 - min_experience_years: Extract minimum experience requirement (e.g., "2 years" -> 2)
 - max_experience_years: Set to null unless explicitly stated (e.g., "2-5 years" -> max is 5)
-- role_keyword: Extract the main job title, role, or focus of the search (e.g., "python developer", "frontend engineer", "data scientist"). Set to null if none is found.
+- role_keyword: Extract the main job title or role (e.g., "python developer", "frontend engineer", "data scientist"). It must represent a full job title/role (e.g., use "frontend developer" instead of just "frontend"). Set to null if none is found.
 
 Examples:
 - "Python developer with 2 years experience" -> {"skills": ["python"], "min_experience_years": 2, "max_experience_years": null, "role_keyword": "python developer"}
-- "Frontend React candidate with 3-5 years" -> {"skills": ["react"], "min_experience_years": 3, "max_experience_years": 5, "role_keyword": "frontend"}
+- "Frontend React candidate with 3-5 years" -> {"skills": ["react"], "min_experience_years": 3, "max_experience_years": 5, "role_keyword": "frontend developer"}
 - "Senior Java and Spring developer" -> {"skills": ["java"], "min_experience_years": 5, "max_experience_years": null, "role_keyword": "senior spring developer"}
 """
 
