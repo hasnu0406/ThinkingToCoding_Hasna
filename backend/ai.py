@@ -4,7 +4,12 @@ from typing import Any
 from groq import Groq
 from openai import OpenAI
 
-from config import GROQ_API_KEYS, OPENROUTER_API_KEY
+from config import (
+    GROQ_API_KEYS, OPENROUTER_API_KEY,
+    GROQ_MODEL, OPENROUTER_MODEL,
+    JSON_TEMPERATURE, JSON_MAX_TOKENS,
+    TEXT_TEMPERATURE, TEXT_MAX_TOKENS,
+)
 from constants import (
     EXTRACTION_PROMPT,
     JOB_RECOMMENDATION_PROMPT,
@@ -33,7 +38,7 @@ class AIClientManager:
             self._clients.append({
                 "provider": "groq",
                 "client": Groq(api_key=k),
-                "model": "llama-3.3-70b-versatile"
+                "model": GROQ_MODEL
             })
             
         # Add OpenRouter client if key exists
@@ -41,7 +46,7 @@ class AIClientManager:
             self._clients.append({
                 "provider": "openrouter",
                 "client": OpenAI(base_url="https://openrouter.ai/api/v1", api_key=openrouter_key),
-                "model": "meta-llama/llama-3.3-70b-instruct"
+                "model": OPENROUTER_MODEL
             })
 
         # Run key validation synchronously on startup to clean the pool immediately
@@ -129,8 +134,8 @@ class AIClientManager:
             try:
                 completion = client.chat.completions.create(
                     model=model,
-                    temperature=0.1,
-                    max_tokens=1200,
+                    temperature=JSON_TEMPERATURE,
+                    max_tokens=JSON_MAX_TOKENS,
                     messages=[{"role": "user", "content": prompt}],
                 )
                 raw_content = (completion.choices[0].message.content or "").strip()
@@ -177,8 +182,8 @@ class AIClientManager:
             try:
                 completion = client.chat.completions.create(
                     model=model,
-                    temperature=0.6,
-                    max_tokens=1024,
+                    temperature=TEXT_TEMPERATURE,
+                    max_tokens=TEXT_MAX_TOKENS,
                     messages=messages,
                 )
                 raw_content = (completion.choices[0].message.content or "").strip()
