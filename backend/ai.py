@@ -1,11 +1,12 @@
 import json
 import threading
+from abc import ABC, abstractmethod
 from typing import Any
 from groq import Groq
 from openai import OpenAI
 
 from config import (
-    GROQ_API_KEYS, OPENROUTER_API_KEY,
+    LLM_PROVIDER, GROQ_API_KEYS, OPENROUTER_API_KEY,
     GROQ_MODEL, OPENROUTER_MODEL,
     JSON_TEMPERATURE, JSON_MAX_TOKENS,
     TEXT_TEMPERATURE, TEXT_MAX_TOKENS,
@@ -20,65 +21,156 @@ from logic import parse_query
 
 
 # ─────────────────────────────────────────────
+# LLM Provider Strategies
+# ─────────────────────────────────────────────
+class LLMProviderWrapper(ABC):
+    def __init__(self, provider_name: str, client: Any, model: str):
+        self.provider = provider_name
+        self.client = client
+        self.model = model
+
+    @abstractmethod
+    def ping(self) -> None:
+        """Test the connection to the provider."""
+        pass
+
+    @abstractmethod
+    def generate(self, messages: list[dict], temperature: float, max_tokens: int) -> str:
+        """Generate a completion string from the provider."""
+        pass
+
+    @abstractmethod
+    def is_auth_error(self, exc: Exception) -> bool:
+        """Check if an exception is an authentication error."""
+        pass
+
+
+class GroqProvider(LLMProviderWrapper):
+    def ping(self) -> None:
+        self.client.chat.completions.create(
+            model=self.model,
+            temperature=0.1,
+            max_tokens=2,
+            messages=[{"role": "user", "content": "ping"}],
+        )
+
+    def generate(self, messages: list[dict], temperature: float, max_tokens: int) -> str:
+        completion = self.client.chat.completions.create(
+            model=self.model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            messages=messages,
+        )
+        return (completion.choices[0].message.content or "").strip()
+
+    def is_auth_error(self, exc: Exception) -> bool:
+        error_str = str(exc).lower()
+        return "401" in error_str or "api_key" in error_str or "unauthorized" in error_str or "invalid api key" in error_str
+
+
+class OpenRouterProvider(LLMProviderWrapper):
+    def ping(self) -> None:
+        self.client.chat.completions.create(
+            model=self.model,
+            temperature=0.1,
+            max_tokens=2,
+            messages=[{"role": "user", "content": "ping"}],
+        )
+
+    def generate(self, messages: list[dict], temperature: float, max_tokens: int) -> str:
+        completion = self.client.chat.completions.create(
+            model=self.model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            messages=messages,
+        )
+        return (completion.choices[0].message.content or "").strip()
+
+    def is_auth_error(self, exc: Exception) -> bool:
+        error_str = str(exc).lower()
+        return "401" in error_str or "api_key" in error_str or "unauthorized" in error_str or "invalid api key" in error_str
+
+
+# ─────────────────────────────────────────────
+# Provider Registry
+# ─────────────────────────────────────────────
+class ProviderRegistry:
+    _builders = {}
+
+    @classmethod
+    def register(cls, name: str):
+        def decorator(builder_func):
+            cls._builders[name] = builder_func
+            return builder_func
+        return decorator
+
+    @classmethod
+    def create_clients(cls, provider_name: str, **kwargs) -> list[LLMProviderWrapper]:
+        builder = cls._builders.get(provider_name)
+        if not builder:
+            print(f"[KeyManager] Unknown provider '{provider_name}'.")
+            return []
+        return builder(**kwargs)
+
+
+@ProviderRegistry.register("groq")
+def build_groq(groq_keys: list[str], **kwargs) -> list[LLMProviderWrapper]:
+    return [
+        GroqProvider(
+            provider_name="groq",
+            client=Groq(api_key=k),
+            model=GROQ_MODEL
+        )
+        for k in groq_keys
+    ]
+
+
+@ProviderRegistry.register("openrouter")
+def build_openrouter(openrouter_key: str | None, **kwargs) -> list[LLMProviderWrapper]:
+    if openrouter_key:
+        return [
+            OpenRouterProvider(
+                provider_name="openrouter",
+                client=OpenAI(base_url="https://openrouter.ai/api/v1", api_key=openrouter_key),
+                model=OPENROUTER_MODEL
+            )
+        ]
+    return []
+
+
+# ─────────────────────────────────────────────
 # Multi-Provider AI Manager
 # ─────────────────────────────────────────────
 class AIClientManager:
     """
-    Manages a pool of AI clients (Groq and OpenRouter) with automatic
-    round-robin rotation and on-error failover. Thread-safe.
+    Manages a pool of AI clients with automatic round-robin rotation
+    and on-error failover. Thread-safe.
     """
 
-    def __init__(self, groq_keys: list[str], openrouter_key: str | None) -> None:
-        self._clients = []
+    def __init__(self, provider: str, groq_keys: list[str], openrouter_key: str | None) -> None:
+        self._clients = ProviderRegistry.create_clients(
+            provider, 
+            groq_keys=groq_keys, 
+            openrouter_key=openrouter_key
+        )
         self._index = 0
         self._lock = threading.Lock()
         
-        # Add Groq clients
-        for k in groq_keys:
-            self._clients.append({
-                "provider": "groq",
-                "client": Groq(api_key=k),
-                "model": GROQ_MODEL
-            })
-            
-        # Add OpenRouter client if key exists
-        if openrouter_key:
-            self._clients.append({
-                "provider": "openrouter",
-                "client": OpenAI(base_url="https://openrouter.ai/api/v1", api_key=openrouter_key),
-                "model": OPENROUTER_MODEL
-            })
-
         # Run key validation synchronously on startup to clean the pool immediately
         self._validate_clients()
 
     def _validate_clients(self) -> None:
         """Verify API keys synchronously on startup to filter out invalid providers."""
         valid_clients = []
-        for c_info in self._clients:
-            client = c_info["client"]
-            model = c_info["model"]
-            provider = c_info["provider"]
-            
-            if provider == "groq":
-                try:
-                    # Test key validity
-                    client.chat.completions.create(
-                        model=model,
-                        temperature=0.1,
-                        max_tokens=2,
-                        messages=[{"role": "user", "content": "ping"}],
-                    )
-                    valid_clients.append(c_info)
-                except Exception as exc:
-                    error_str = str(exc).lower()
-                    is_auth_error = "401" in error_str or "api_key" in error_str or "unauthorized" in error_str or "invalid api key" in error_str
-                    if is_auth_error:
-                        print(f"[KeyManager Startup] Disabled invalid Groq key on initialization.")
-                    else:
-                        valid_clients.append(c_info)
-            else:
-                valid_clients.append(c_info)
+        for client_wrapper in self._clients:
+            try:
+                client_wrapper.ping()
+                valid_clients.append(client_wrapper)
+            except Exception as exc:
+                if client_wrapper.is_auth_error(exc):
+                    print(f"[KeyManager Startup] Disabled invalid {client_wrapper.provider} key on initialization.")
+                else:
+                    valid_clients.append(client_wrapper)
                 
         with self._lock:
             self._clients = valid_clients
@@ -91,7 +183,7 @@ class AIClientManager:
     def available(self) -> bool:
         return len(self._clients) > 0
 
-    def _current_client(self) -> dict | None:
+    def _current_client(self) -> LLMProviderWrapper | None:
         with self._lock:
             if not self._clients:
                 return None
@@ -109,7 +201,7 @@ class AIClientManager:
             if len(self._clients) > 0:
                 idx = self._index % len(self._clients)
                 removed = self._clients.pop(idx)
-                print(f"[KeyManager] Disabled invalid provider/key: {removed['provider']}")
+                print(f"[KeyManager] Disabled invalid provider/key: {removed.provider}")
                 if len(self._clients) > 0:
                     self._index = self._index % len(self._clients)
                 else:
@@ -123,41 +215,33 @@ class AIClientManager:
         if not self.available:
             return fallback
 
-        for attempt in range(len(self._clients)):
-            client_info = self._current_client()
-            if not client_info:
+        for _ in range(len(self._clients)):
+            client_wrapper = self._current_client()
+            if not client_wrapper:
                 break
-            client = client_info["client"]
-            model = client_info["model"]
-            provider = client_info["provider"]
             
             try:
-                completion = client.chat.completions.create(
-                    model=model,
-                    temperature=JSON_TEMPERATURE,
-                    max_tokens=JSON_MAX_TOKENS,
+                raw_content = client_wrapper.generate(
                     messages=[{"role": "user", "content": prompt}],
+                    temperature=JSON_TEMPERATURE,
+                    max_tokens=JSON_MAX_TOKENS
                 )
-                raw_content = (completion.choices[0].message.content or "").strip()
                 if not raw_content:
-                    print(f"[KeyManager] {provider} returned empty content. Rotating.")
+                    print(f"[KeyManager] {client_wrapper.provider} returned empty content. Rotating.")
                     self._rotate()
                     continue
-                return json.loads(
-                    _clean_json_payload(raw_content)
-                )
+                return json.loads(_clean_json_payload(raw_content))
             except Exception as exc:
                 error_str = str(exc).lower()
-                is_auth_error = "401" in error_str or "api_key" in error_str or "unauthorized" in error_str or "invalid api key" in error_str
                 
-                if is_auth_error:
-                    print(f"[KeyManager] {provider} authentication failed (401). Disabling key.")
+                if client_wrapper.is_auth_error(exc):
+                    print(f"[KeyManager] {client_wrapper.provider} authentication failed (401). Disabling key.")
                     self._disable_current_client()
                 elif "rate" in error_str or "429" in error_str or "quota" in error_str:
-                    print(f"[KeyManager] {provider} rate-limited. Rotating.")
+                    print(f"[KeyManager] {client_wrapper.provider} rate-limited. Rotating.")
                     self._rotate()
                 else:
-                    print(f"[KeyManager] {provider} JSON request failed: {exc}. Rotating.")
+                    print(f"[KeyManager] {client_wrapper.provider} JSON request failed: {exc}. Rotating.")
                     self._rotate()
 
         print("[KeyManager] All providers exhausted. Returning fallback.")
@@ -171,39 +255,33 @@ class AIClientManager:
         if not self.available:
             return ""
 
-        for attempt in range(len(self._clients)):
-            client_info = self._current_client()
-            if not client_info:
+        for _ in range(len(self._clients)):
+            client_wrapper = self._current_client()
+            if not client_wrapper:
                 break
-            client = client_info["client"]
-            model = client_info["model"]
-            provider = client_info["provider"]
             
             try:
-                completion = client.chat.completions.create(
-                    model=model,
-                    temperature=TEXT_TEMPERATURE,
-                    max_tokens=TEXT_MAX_TOKENS,
+                raw_content = client_wrapper.generate(
                     messages=messages,
+                    temperature=TEXT_TEMPERATURE,
+                    max_tokens=TEXT_MAX_TOKENS
                 )
-                raw_content = (completion.choices[0].message.content or "").strip()
                 if not raw_content:
-                    print(f"[KeyManager] {provider} returned empty text content. Rotating.")
+                    print(f"[KeyManager] {client_wrapper.provider} returned empty text content. Rotating.")
                     self._rotate()
                     continue
                 return raw_content
             except Exception as exc:
                 error_str = str(exc).lower()
-                is_auth_error = "401" in error_str or "api_key" in error_str or "unauthorized" in error_str or "invalid api key" in error_str
                 
-                if is_auth_error:
-                    print(f"[KeyManager] {provider} authentication failed (401). Disabling key.")
+                if client_wrapper.is_auth_error(exc):
+                    print(f"[KeyManager] {client_wrapper.provider} authentication failed (401). Disabling key.")
                     self._disable_current_client()
                 elif "rate" in error_str or "429" in error_str or "quota" in error_str:
-                    print(f"[KeyManager] {provider} rate-limited. Rotating.")
+                    print(f"[KeyManager] {client_wrapper.provider} rate-limited. Rotating.")
                     self._rotate()
                 else:
-                    print(f"[KeyManager] {provider} text call failed: {exc}. Rotating.")
+                    print(f"[KeyManager] {client_wrapper.provider} text call failed: {exc}. Rotating.")
                     self._rotate()
 
         return ""
@@ -212,10 +290,10 @@ class AIClientManager:
 # ─────────────────────────────────────────────
 # Singleton Manager
 # ─────────────────────────────────────────────
-key_manager = AIClientManager(GROQ_API_KEYS, OPENROUTER_API_KEY)
-groq_available = key_manager.available
+key_manager = AIClientManager(LLM_PROVIDER, GROQ_API_KEYS, OPENROUTER_API_KEY)
+llm_available = key_manager.available
 
-if not groq_available:
+if not llm_available:
     print("WARNING: No API Keys set. AI endpoints will use fallback content.")
 
 
@@ -231,7 +309,7 @@ def ai_extract_resume(text_content: str) -> dict[str, Any]:
         return _safe_profile(None)
     fallback = _safe_profile(None)
     response = call_groq_json(
-        f"{EXTRACTION_PROMPT}\n\nResume content:\n{text_content}", fallback=fallback
+        f"{EXTRACTION_PROMPT}\\n\\nResume content:\\n{text_content}", fallback=fallback
     )
     return _safe_profile(response) if isinstance(response, dict) else fallback
 
@@ -267,7 +345,7 @@ def ai_parse_query(query: str, history: list[dict] = None) -> dict[str, Any]:
             role = msg.get("role", "user")
             content = msg.get("content", "")
             context_msgs.append(f"{role.capitalize()}: {content}")
-        context_str = "Conversation history for context:\n" + "\n".join(context_msgs) + "\n\n"
+        context_str = "Conversation history for context:\\n" + "\\n".join(context_msgs) + "\\n\\n"
 
     prompt = f"""{QUERY_PARSING_PROMPT}
 
@@ -337,7 +415,7 @@ def ai_chatbot_reply(conversation: list[dict], ranked_candidates: list[dict], fi
                 f"Score: {c.get('rank_score', 0)} | "
                 f"Skills: {', '.join(c.get('skills', [])[:6])}"
             )
-        ranked_text = "\n".join(candidates_text)
+        ranked_text = "\\n".join(candidates_text)
     else:
         ranked_text = "No candidates matched."
 
@@ -383,5 +461,4 @@ Title:"""
     if not title:
         title = query[:50] + "..." if len(query) > 50 else query
     return title
-
 

@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # Import AI/groq status to expose in health check
-from ai import groq_available
+from ai import llm_available
 
 # Import Routers
 from routers import search
@@ -58,7 +58,8 @@ def home() -> dict[str, str]:
 def health() -> dict[str, Any]:
     return {
         "status": "ok",
-        "groq_available": groq_available,
+        "groq_available": llm_available,
+        "llm_available": llm_available,
         "timestamp": datetime.datetime.utcnow().isoformat(),
     }
 
