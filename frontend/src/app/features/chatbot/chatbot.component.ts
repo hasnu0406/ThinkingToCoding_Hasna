@@ -1,14 +1,14 @@
 import { Component, ElementRef, ViewChild, AfterViewChecked, Output, EventEmitter, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApiService } from '../api.service';
-import { CandidateProfile } from '../models';
+import { ApiService } from '../../core/api.service';
+import { CandidateProfile } from '../../core/models';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
-  candidates?: CandidateProfile[];  // bot messages can carry candidate cards
+  candidates?: CandidateProfile[];
 }
 
 @Component({
@@ -21,7 +21,7 @@ interface ChatMessage {
 export class ChatbotComponent implements AfterViewChecked, OnChanges {
   @ViewChild('messagesContainer') messagesContainer!: ElementRef;
   @Output() candidateSelected = new EventEmitter<CandidateProfile>();
-  
+
   @Input() sessionId: string | null = null;
   @Input() userEmail: string = '';
   @Output() sessionCreated = new EventEmitter<string>();
@@ -96,14 +96,14 @@ export class ChatbotComponent implements AfterViewChecked, OnChanges {
       next: (res) => {
         const wasNewSession = !this.sessionId;
         this.sessionId = res.session_id;
-        
+
         this.messages.push({
           role: 'assistant',
           content: res.reply,
           candidates: res.candidates || [],
           timestamp: new Date()
         });
-        
+
         this.isThinking = false;
         this.shouldScroll = true;
 

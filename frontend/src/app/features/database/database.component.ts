@@ -1,8 +1,8 @@
 import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { animate, style, transition, trigger } from '@angular/animations';
-import { ApiService } from '../api.service';
-import { CandidateProfile } from '../models';
+import { ApiService } from '../../core/api.service';
+import { CandidateProfile } from '../../core/models';
 
 @Component({
   selector: 'app-database',

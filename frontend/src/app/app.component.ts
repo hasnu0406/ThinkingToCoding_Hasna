@@ -1,15 +1,15 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { animate, style, transition, trigger } from '@angular/animations';
-import { ApiService } from './api.service';
-import { CandidateProfile } from './models';
-import { ThreeBgComponent } from './three-bg.component';
-import { ChatbotComponent } from './chatbot/chatbot.component';
-import { AuthComponent } from './auth/auth.component';
-import { DashboardComponent } from './dashboard/dashboard.component';
-import { UploadComponent } from './upload/upload.component';
-import { DatabaseComponent } from './database/database.component';
-import { HistoryComponent } from './history/history.component';
+import { ApiService } from './core/api.service';
+import { CandidateProfile } from './core/models';
+import { ThreeBgComponent } from './shared/components/three-bg/three-bg.component';
+import { ChatbotComponent } from './features/chatbot/chatbot.component';
+import { AuthComponent } from './features/auth/auth.component';
+import { DashboardComponent } from './features/dashboard/dashboard.component';
+import { UploadComponent } from './features/upload/upload.component';
+import { DatabaseComponent } from './features/database/database.component';
+import { HistoryComponent } from './features/history/history.component';
 
 @Component({
   selector: 'app-root',

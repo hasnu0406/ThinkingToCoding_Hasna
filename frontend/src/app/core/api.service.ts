@@ -47,7 +47,6 @@ export class ApiService {
     return this.http.delete<any>(`${this.baseUrl}/chat/sessions?user_email=${encodeURIComponent(email)}`);
   }
 
-
   uploadResume(file: File): Observable<CandidateProfile> {
     const formData = new FormData();
     formData.append('file', file);

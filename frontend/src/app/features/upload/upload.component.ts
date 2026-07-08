@@ -2,8 +2,8 @@ import { Component, EventEmitter, inject, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { catchError, forkJoin, map, of } from 'rxjs';
-import { ApiService } from '../api.service';
-import { CandidateProfile } from '../models';
+import { ApiService } from '../../core/api.service';
+import { CandidateProfile } from '../../core/models';
 
 @Component({
   selector: 'app-upload',

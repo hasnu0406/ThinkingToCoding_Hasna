@@ -2,7 +2,7 @@ import { Component, EventEmitter, inject, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { animate, style, transition, trigger } from '@angular/animations';
-import { ApiService } from '../api.service';
+import { ApiService } from '../../core/api.service';
 
 @Component({
   selector: 'app-auth',

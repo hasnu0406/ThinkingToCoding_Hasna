@@ -24,7 +24,7 @@ import * as THREE from 'three';
 })
 export class ThreeBgComponent implements OnInit, OnDestroy {
   @ViewChild('canvas') canvasRef!: ElementRef<HTMLCanvasElement>;
-  
+
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
   private renderer!: THREE.WebGLRenderer;
@@ -40,29 +40,22 @@ export class ThreeBgComponent implements OnInit, OnDestroy {
     const width = window.innerWidth;
     const height = window.innerHeight;
 
-    // Scene setup
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    this.renderer = new THREE.WebGLRenderer({ 
-      canvas, 
-      alpha: true, 
-      antialias: true 
+    this.renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: true
     });
 
     this.renderer.setSize(width, height);
     this.renderer.setClearColor(0x0d1b2a, 0.1);
     this.camera.position.z = 5;
 
-    // Create particle system
     this.createParticles();
-
-    // Create floating geometric shapes
     this.createGeometricElements();
 
-    // Handle resize
     window.addEventListener('resize', () => this.onWindowResize());
-
-    // Start animation loop
     this.animate();
   }
 
@@ -93,7 +86,6 @@ export class ThreeBgComponent implements OnInit, OnDestroy {
   }
 
   private createGeometricElements(): void {
-    // Create rotating cube
     const cubeGeometry = new THREE.BoxGeometry(2, 2, 2);
     const cubeMaterial = new THREE.MeshPhongMaterial({
       color: 0xffbe5c,
@@ -106,7 +98,6 @@ export class ThreeBgComponent implements OnInit, OnDestroy {
     cube.position.set(-4, 2, -3);
     this.scene.add(cube);
 
-    // Create rotating torus
     const torusGeometry = new THREE.TorusGeometry(1.5, 0.4, 16, 100);
     const torusMaterial = new THREE.MeshPhongMaterial({
       color: 0x53a3d6,
@@ -119,7 +110,6 @@ export class ThreeBgComponent implements OnInit, OnDestroy {
     torus.position.set(4, -2, -3);
     this.scene.add(torus);
 
-    // Create sphere
     const sphereGeometry = new THREE.SphereGeometry(1.2, 32, 32);
     const sphereMaterial = new THREE.MeshPhongMaterial({
       color: 0xf57c51,
@@ -132,14 +122,12 @@ export class ThreeBgComponent implements OnInit, OnDestroy {
     sphere.position.set(0, 0, -5);
     this.scene.add(sphere);
 
-    // Store for animation
     this.particles = [cube, torus, sphere] as any;
   }
 
   private animate = (): void => {
     this.animationId = requestAnimationFrame(this.animate);
 
-    // Rotate particles
     this.scene.children.forEach((child, index) => {
       if (child instanceof THREE.Mesh || child instanceof THREE.Points) {
         if (child instanceof THREE.Mesh) {
@@ -156,16 +144,13 @@ export class ThreeBgComponent implements OnInit, OnDestroy {
   private onWindowResize(): void {
     const width = window.innerWidth;
     const height = window.innerHeight;
-
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
   }
 
   ngOnDestroy(): void {
-    if (this.animationId) {
-      cancelAnimationFrame(this.animationId);
-    }
+    if (this.animationId) cancelAnimationFrame(this.animationId);
     this.renderer.dispose();
   }
 }

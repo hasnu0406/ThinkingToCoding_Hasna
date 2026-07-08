@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CandidateProfile } from '../models';
+import { CandidateProfile } from '../../core/models';
 
 @Component({
   selector: 'app-dashboard',
