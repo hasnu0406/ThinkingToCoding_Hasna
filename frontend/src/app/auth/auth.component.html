@@ -1,0 +1,66 @@
+<div class="auth-wrapper" [@fadeInOut]>
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="auth-logo">🤖</div>
+      <h1>Candidate Search <span>Bot</span></h1>
+      <p class="auth-subtitle">AI-Powered Intelligent Recruitment</p>
+    </div>
+
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab-btn" [class.active]="authMode === 'login'" (click)="toggleAuthMode()">Login</button>
+      <button type="button" class="auth-tab-btn" [class.active]="authMode === 'register'" (click)="toggleAuthMode()">Sign Up</button>
+    </div>
+
+    <!-- Auth Error Alert -->
+    <div class="auth-error-alert" *ngIf="authError" [@fadeInOut]>
+      <span class="alert-icon">⚠️</span>
+      <p class="alert-text">{{ authError }}</p>
+    </div>
+
+    <form [formGroup]="authForm" (ngSubmit)="handleAuthSubmit()" class="auth-form">
+      <div class="form-group" *ngIf="authMode === 'register'">
+        <label for="auth-name">Full Name</label>
+        <div class="input-container">
+          <span class="input-icon">📝</span>
+          <input type="text" id="auth-name" formControlName="name" placeholder="Enter your name" required>
+        </div>
+        <div class="validation-error" *ngIf="authForm.get('name')?.touched && authForm.get('name')?.errors?.['required']">
+          Name is required.
+        </div>
+        <div class="validation-error" *ngIf="authForm.get('name')?.touched && authForm.get('name')?.errors?.['minlength']">
+          Name must be at least 2 characters.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="auth-email">Email Address</label>
+        <div class="input-container">
+          <span class="input-icon">📧</span>
+          <input type="email" id="auth-email" formControlName="email" placeholder="Enter your email" required>
+        </div>
+        <div class="validation-error" *ngIf="authForm.get('email')?.touched && authForm.get('email')?.errors?.['required']">
+          Email is required.
+        </div>
+        <div class="validation-error" *ngIf="authForm.get('email')?.touched && authForm.get('email')?.errors?.['email']">
+          Please enter a valid email address.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="auth-password">Password</label>
+        <div class="input-container">
+          <span class="input-icon">🔑</span>
+          <input type="password" id="auth-password" formControlName="password" placeholder="Enter password" required>
+        </div>
+        <div class="validation-error" *ngIf="authForm.get('password')?.touched && authForm.get('password')?.errors?.['minlength']">
+          Password must be at least 6 characters.
+        </div>
+      </div>
+
+      <button type="submit" class="premium-btn btn-primary auth-submit-btn" [disabled]="isAuthLoading || authForm.invalid">
+        <span *ngIf="!isAuthLoading">{{ authMode === 'login' ? 'Access Platform ➜' : 'Create Account ➜' }}</span>
+        <span *ngIf="isAuthLoading" class="loading">{{ authMode === 'login' ? 'Authenticating...' : 'Creating Account...' }}</span>
+      </button>
+    </form>
+  </div>
+</div>

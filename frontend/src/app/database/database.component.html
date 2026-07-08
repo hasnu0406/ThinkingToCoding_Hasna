@@ -1,0 +1,127 @@
+<section class="viewport-section workspace-viewport">
+  <div class="workspace-container">
+    <!-- Candidates Sidebar -->
+    <aside class="candidates-sidebar">
+      <div class="sidebar-header">
+        <div>
+          <h2>Profiles Database</h2>
+          <p class="candidate-count">{{ candidates.length }} profile{{ candidates.length === 1 ? '' : 's' }}</p>
+        </div>
+        <div class="sidebar-actions">
+          <button type="button" class="icon-btn" (click)="refreshAll.emit()" [disabled]="isSearching" title="Refresh">
+            🔄
+          </button>
+          <button type="button" class="icon-btn" (click)="exportCSV()" title="Export Database to CSV">
+            📥
+          </button>
+        </div>
+      </div>
+
+      <div class="candidates-list">
+        <div
+          class="candidate-item"
+          *ngFor="let candidate of candidates"
+          [class.active]="selectedCandidate?.id === candidate.id"
+          (click)="selectCandidate(candidate)"
+          [@slideIn]>
+          <div class="candidate-info">
+            <div class="candidate-header-row">
+              <h4>{{ candidate.name }}</h4>
+              <span class="rank-badge" *ngIf="candidate.rank_score !== undefined" [title]="'Match Score: ' + candidate.rank_score">
+                ⭐ {{ candidate.rank_score }}
+              </span>
+            </div>
+            <p>{{ candidate.role }}</p>
+            <p class="experience">{{ candidate.experience }}</p>
+          </div>
+          <div class="skills-preview">
+            <span *ngFor="let skill of candidate.skills | slice:0:2" class="skill-tag">{{ skill }}</span>
+            <span *ngIf="candidate.skills.length > 2" class="skill-more">+{{ candidate.skills.length - 2 }}</span>
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="candidates.length === 0">
+          <p>No candidates found</p>
+          <button class="premium-btn btn-primary" (click)="navigateToUpload.emit()">Upload Resume</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Detail Panel -->
+    <main class="detail-panel" *ngIf="selectedCandidate as candidate" [@fadeInOut]>
+      <div class="panel-header">
+        <div class="candidate-header">
+          <div class="avatar">{{ candidate.name.charAt(0).toUpperCase() }}</div>
+          <div class="candidate-meta">
+            <h2>{{ candidate.name }}</h2>
+            <p class="role-badge">{{ candidate.role }}</p>
+          </div>
+        </div>
+        <div class="panel-actions">
+          <button type="button" class="icon-btn" (click)="refreshRecommendations(candidate)" title="Refresh Job Matches">
+            🔄
+          </button>
+          <button type="button" class="icon-btn danger" (click)="deleteCandidate(candidate)" title="Delete Profile">
+            🗑️
+          </button>
+        </div>
+      </div>
+
+      <div class="panel-content">
+        <!-- Key Info Grid -->
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Current Role</span>
+            <p class="info-value">{{ candidate.role }}</p>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Experience</span>
+            <p class="info-value">{{ candidate.experience }}</p>
+          </div>
+        </div>
+
+        <!-- Skills Section -->
+        <div class="section-block">
+          <h3 class="section-title">Technical Skills Extracted</h3>
+          <div class="skills-grid">
+            <button type="button" class="skill-badge" *ngFor="let skill of candidate.skills" (click)="searchBySkill.emit(skill)">
+              {{ skill }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Recommendations Section -->
+        <div class="section-block">
+          <h3 class="section-title">Recommended Positions</h3>
+          <div class="recommendations">
+            <div class="recommendation-item" *ngFor="let job of candidate.recommended_jobs">
+              <span class="job-icon">💼</span>
+              <span>{{ job }}</span>
+            </div>
+            <div class="empty-sub-state" *ngIf="candidate.recommended_jobs.length === 0">
+              No recommendations found yet. Click 🔄 to regenerate.
+            </div>
+          </div>
+        </div>
+
+        <!-- Job History Section -->
+        <div class="section-block" *ngIf="candidate.job_roles.length > 0">
+          <h3 class="section-title">Career Timeline</h3>
+          <div class="timeline">
+            <div class="timeline-item" *ngFor="let role of candidate.job_roles">
+              <div class="timeline-marker"></div>
+              <p>{{ role }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <main class="detail-panel empty-detail" *ngIf="!selectedCandidate" [@fadeInOut]>
+      <div class="panel-placeholder">
+        <h2>No candidate selected</h2>
+        <p>Select a profile from the database sidebar list or upload a resume to inspect full candidate metrics.</p>
+      </div>
+    </main>
+  </div>
+</section>

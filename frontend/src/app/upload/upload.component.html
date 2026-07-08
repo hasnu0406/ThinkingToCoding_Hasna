@@ -1,0 +1,44 @@
+<section class="viewport-section">
+  <div class="action-card full-width-card">
+    <div class="card-header">
+      <div class="icon-circle">📤</div>
+      <div>
+        <h3>Resume Parser Console</h3>
+        <p>Upload new CVs to extract candidate details and generate job match suggestions</p>
+      </div>
+    </div>
+
+    <div class="upload-zone-wrapper">
+      <form [formGroup]="uploadForm" (ngSubmit)="uploadResume()" class="action-form">
+        <div class="drag-drop-area">
+          <div class="upload-graphic">📄</div>
+          <h4>Select Resumes to Parse</h4>
+          <p class="card-description">Supports PDF, DOCX, and TXT files. You can select multiple documents at once.</p>
+
+          <label class="file-upload">
+            <span>{{ selectedFileSummary }}</span>
+            <input type="file" accept=".pdf,.docx,.txt" multiple (change)="onFileSelected($event)">
+          </label>
+        </div>
+
+        <!-- Selected Files Details -->
+        <div class="file-meta upload-files-list" *ngIf="selectedFiles.length > 0">
+          <div class="file-list">
+            <strong>Selected Resumes ({{ selectedFiles.length }}):</strong>
+            <div class="file-item-pills">
+              <span class="file-pill" *ngFor="let file of selectedFiles">{{ file.name }}</span>
+            </div>
+          </div>
+          <button type="button" class="premium-btn btn-ghost" (click)="clearSelectedFile()">Clear All</button>
+        </div>
+
+        <div class="upload-actions">
+          <button type="submit" class="premium-btn btn-primary btn-large" [disabled]="isUploading || uploadForm.invalid">
+            <span *ngIf="!isUploading">Parse & Upload {{ selectedFiles.length > 0 ? '(' + selectedFiles.length + ' files)' : '' }}</span>
+            <span *ngIf="isUploading" class="loading">Parsing files in progress...</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>

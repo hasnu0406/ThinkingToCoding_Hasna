@@ -1,0 +1,92 @@
+<section class="viewport-section">
+  <!-- Hero intro -->
+  <header class="dashboard-hero">
+    <div class="hero-content">
+      <div class="badge">INTELLIGENT RECRUITMENT PLATFORM</div>
+      <h1 class="hero-title">Candidate <span class="accent-text">Discovery</span> Dashboard</h1>
+      <p class="hero-subtitle">Streamlined profile parsing, natural-language search, and skill analytics.</p>
+    </div>
+  </header>
+
+  <!-- Stats Counter Panel -->
+  <div class="stats-grid">
+    <div class="stat-card" (click)="navigateTo.emit('database')">
+      <div class="stat-icon">📂</div>
+      <div class="stat-details">
+        <h3>{{ candidates.length }}</h3>
+        <p>Total Profiles</p>
+      </div>
+      <span class="stat-link">View Database ➜</span>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">⚡</div>
+      <div class="stat-details">
+        <h3>{{ totalUniqueSkillsCount }}</h3>
+        <p>Unique Skills Extracted</p>
+      </div>
+      <span class="stat-link">Explore Skillsets</span>
+    </div>
+
+    <div class="stat-card" (click)="navigateTo.emit('upload')">
+      <div class="stat-icon">📤</div>
+      <div class="stat-details">
+        <h3>Upload</h3>
+        <p>New Resumes</p>
+      </div>
+      <span class="stat-link">Start Parsing ➜</span>
+    </div>
+
+    <div class="stat-card" (click)="navigateTo.emit('search')">
+      <div class="stat-icon">🔍</div>
+      <div class="stat-details">
+        <h3>AI Engine</h3>
+        <p>NL Search Tool</p>
+      </div>
+      <span class="stat-link">Launch Console ➜</span>
+    </div>
+  </div>
+
+  <!-- Dashboard Layout Split -->
+  <div class="dashboard-split">
+    <!-- Left: Top Skills Widget -->
+    <div class="widget-panel">
+      <div class="widget-header">
+        <h3>⚡ Extracted Skill Analytics</h3>
+        <p>Most common skills across candidate profiles. Click a skill to instantly trigger an AI search filter.</p>
+      </div>
+      <div class="skills-dashboard-cloud">
+        <button type="button" class="skill-cloud-tag" *ngFor="let skill of topSkillsList" (click)="searchBySkill.emit(skill.name)">
+          <span class="skill-name">{{ skill.name }}</span>
+          <span class="skill-count">{{ skill.count }}</span>
+        </button>
+        <div class="empty-widget-state" *ngIf="topSkillsList.length === 0">
+          <p>No skills extracted yet</p>
+          <small>Upload candidate resumes in the "Upload Resumes" tab to see skill graphs.</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Recent Activity / Profile list -->
+    <div class="widget-panel">
+      <div class="widget-header">
+        <h3>🕒 Recent Profiles Added</h3>
+        <p>Quick access to the last uploaded candidate resumes.</p>
+      </div>
+      <div class="recent-profiles-list">
+        <div class="recent-profile-item" *ngFor="let candidate of recentCandidates" (click)="inspectCandidate.emit(candidate)">
+          <div class="profile-avatar">{{ candidate.name.charAt(0).toUpperCase() }}</div>
+          <div class="profile-meta">
+            <h4>{{ candidate.name }}</h4>
+            <p>{{ candidate.role }} • <span class="exp">{{ candidate.experience }}</span></p>
+          </div>
+          <span class="profile-arrow">➜</span>
+        </div>
+        <div class="empty-widget-state" *ngIf="recentCandidates.length === 0">
+          <p>No profiles in database</p>
+          <small>Upload your first resume to see active profiles here.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
