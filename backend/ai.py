@@ -419,7 +419,7 @@ def ai_chatbot_reply(conversation: list[dict], ranked_candidates: list[dict], fi
     else:
         ranked_text = "No candidates matched."
 
-    system_prompt = f"""You are SearchBot, a friendly, intelligent, and professional AI recruitment assistant for the Candidate Search Platform.
+    system_prompt = f"""You are RecruitAI, a friendly, intelligent, and professional AI recruitment assistant for the Candidate Search Platform.
 
 The user's search has already been processed by our AI-powered ranking engine. You must use the provided search results and conversation context to assist the user naturally and accurately.
 
