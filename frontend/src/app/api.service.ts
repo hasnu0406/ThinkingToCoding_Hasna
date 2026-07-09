@@ -72,6 +72,10 @@ export class ApiService {
     return this.http.delete(`${this.baseUrl}/resume/${candidateId}`);
   }
 
+  downloadResumePdf(candidateId: string): void {
+    window.open(`${this.baseUrl}/resume/${candidateId}/download`, '_blank');
+  }
+
   getSearchHistory(limit: number = 20): Observable<SearchHistory[]> {
     return this.http.get<SearchHistory[]>(`${this.baseUrl}/search/history?limit=${limit}`);
   }

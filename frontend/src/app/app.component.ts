@@ -449,6 +449,13 @@ export class AppComponent {
     });
   }
 
+  downloadResumePdf(candidate: CandidateProfile): void {
+    if (!candidate || !candidate.id) {
+      return;
+    }
+    this.api.downloadResumePdf(candidate.id);
+  }
+
   deleteCandidate(candidate: CandidateProfile): void {
     if (!confirm(`Delete ${candidate.name}?`)) {
       return;

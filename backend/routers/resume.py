@@ -2,6 +2,9 @@ import datetime
 import hashlib
 from typing import Any
 from fastapi import APIRouter, File, Query, UploadFile
+from fastapi.responses import FileResponse
+import os
+from fpdf import FPDF
 
 from models import UpdateCandidateRequest
 from database import resume_collection
@@ -40,9 +43,28 @@ async def upload_resume(file: UploadFile = File(...)) -> dict[str, Any]:
 
     parsed = ai_extract_resume(resume_text)
     recommended_jobs = ai_recommend_jobs(parsed)
+    
+    file_hash = hashlib.sha256(file_bytes).hexdigest()
+    pdf_filename = f"{file_hash}.pdf"
+    pdf_path = os.path.join("uploads", pdf_filename)
+    
+    # Save as PDF
+    if file_kind == "pdf":
+        with open(pdf_path, "wb") as f:
+            f.write(file_bytes)
+    else:
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("helvetica", size=12)
+        # Sanitize text to latin-1 to avoid fpdf character errors
+        clean_text = resume_text.encode('latin-1', 'replace').decode('latin-1')
+        pdf.multi_cell(0, 10, text=clean_text)
+        pdf.output(pdf_path)
+
     document = {
         "file_name": file.filename,
-        "file_hash": hashlib.sha256(file_bytes).hexdigest(),
+        "file_hash": file_hash,
+        "pdf_path": pdf_path,
         "name": parsed.get("name", "Unknown"),
         "age": parsed.get("age", "Not specified"),
         "experience": parsed.get("experience", "fresher"),
@@ -120,10 +142,29 @@ def update_resume(id: str, updates: UpdateCandidateRequest) -> dict[str, Any]:
 
 @router.delete("/{id}")
 def delete_resume(id: str) -> dict[str, str]:
-    result = resume_collection.delete_one({"_id": _get_object_id(id)})
-    if result.deleted_count == 0:
+    document = resume_collection.find_one({"_id": _get_object_id(id)})
+    if not document:
         raise _error(404, "Resume not found.", "not_found")
+        
+    result = resume_collection.delete_one({"_id": _get_object_id(id)})
+    if result.deleted_count > 0:
+        pdf_path = document.get("pdf_path")
+        if pdf_path and os.path.exists(pdf_path):
+            os.remove(pdf_path)
+            
     return {"message": "Resume deleted successfully."}
+
+@router.get("/{id}/download")
+def download_resume(id: str):
+    document = resume_collection.find_one({"_id": _get_object_id(id)})
+    if not document:
+        raise _error(404, "Resume not found.", "not_found")
+        
+    pdf_path = document.get("pdf_path")
+    if not pdf_path or not os.path.exists(pdf_path):
+        raise _error(404, "PDF file not found on server.", "not_found")
+        
+    return FileResponse(pdf_path, media_type="application/pdf", filename=f"{document.get('name', 'resume')}.pdf")
 
 
 @router.get("/{id}/recommend")
