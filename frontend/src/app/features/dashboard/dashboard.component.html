@@ -40,7 +40,7 @@
     <div class="stat-card" (click)="navigateTo.emit('search')">
       <div class="stat-icon">🔍</div>
       <div class="stat-details">
-        <h3>AI Engine</h3>
+        <h3>CV Finder</h3>
         <p>NL Search Tool</p>
       </div>
       <span class="stat-link">Launch Console ➜</span>
@@ -53,7 +53,7 @@
     <div class="widget-panel">
       <div class="widget-header">
         <h3>⚡ Extracted Skill Analytics</h3>
-        <p>Most common skills across candidate profiles. Click a skill to instantly trigger an AI search filter.</p>
+        <p>Most common skills across candidate profiles. Click a skill to instantly trigger a search filter.</p>
       </div>
       <div class="skills-dashboard-cloud">
         <button type="button" class="skill-cloud-tag" *ngFor="let skill of topSkillsList" (click)="searchBySkill.emit(skill.name)">
