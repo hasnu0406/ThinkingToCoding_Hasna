@@ -1,4 +1,4 @@
-/* ── Wrapper ── */
+/* â”€â”€ Wrapper â”€â”€ */
 .chat-wrapper {
   display: flex;
   flex-direction: column;
@@ -11,7 +11,7 @@
   padding-bottom: 12px;
 }
 
-/* ── Header ── */
+/* â”€â”€ Header â”€â”€ */
 .chat-header {
   display: flex;
   align-items: center;
@@ -87,7 +87,7 @@
   color: #ff7b72;
 }
 
-/* ── Messages Area ── */
+/* â”€â”€ Messages Area â”€â”€ */
 .messages-area {
   flex: 1;
   overflow-y: auto;
@@ -105,7 +105,7 @@
   border-radius: 10px;
 }
 
-/* ── Every message row: flex row with avatar + bubble ── */
+/* â”€â”€ Every message row: flex row with avatar + bubble â”€â”€ */
 .message-row {
   display: flex;
   align-items: flex-start;   /* top-align avatar with bubble */
@@ -137,7 +137,7 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Avatars ── */
+/* â”€â”€ Avatars â”€â”€ */
 .msg-avatar {
   width: 32px;
   height: 32px;
@@ -160,7 +160,7 @@
   border: 1px solid rgba(63, 185, 80, 0.2);
 }
 
-/* ── Bubbles ── */
+/* â”€â”€ Bubbles â”€â”€ */
 .bubble {
   max-width: calc(100% - 80px);   /* leave room for avatar */
   padding: 11px 15px;
@@ -198,7 +198,7 @@
   text-align: right;
 }
 
-/* ── Candidate Cards Area ── */
+/* â”€â”€ Candidate Cards Area â”€â”€ */
 /* Indented by avatar width (32px) + gap (10px) = 42px, to align under the bot bubble */
 .candidate-cards-area {
   padding-left: 42px;
@@ -337,7 +337,7 @@
   text-align: right;
 }
 
-/* ── Robot Thinking Row ── */
+/* â”€â”€ Robot Thinking Row â”€â”€ */
 .thinking-row {
   display: flex;
   align-items: center;
@@ -352,7 +352,7 @@
   font-style: italic;
 }
 
-/* ── Robot Animation ── */
+/* â”€â”€ Robot Animation â”€â”€ */
 .robot-assistant {
   width: 54px;
   height: 64px;
@@ -522,7 +522,7 @@
 @keyframes robotScan         { 0%, 100% { transform: translateX(0); opacity: 0.25; } 50% { transform: translateX(8px); opacity: 1; } }
 @keyframes robotThinkingScan { 0%, 100% { transform: translateX(-4px) scaleY(0.75); opacity: 0.45; } 50% { transform: translateX(14px) scaleY(1.2); opacity: 1; } }
 
-/* ── Input Area ── */
+/* â”€â”€ Input Area â”€â”€ */
 .input-area {
   display: flex;
   align-items: center;
@@ -744,5 +744,184 @@ kbd {
     padding: 20px 10px;
   }
 }
+
+/* ==================== SKY BLUEPRINT â€” CHATBOT LIGHT THEME ==================== */
+
+:host-context([data-theme="light"]) .chat-wrapper {
+  background: #FFFFFF;
+  border-color: rgba(13, 27, 62, 0.1);
+}
+
+:host-context([data-theme="light"]) .chat-header {
+  background: rgba(238, 242, 255, 0.8);
+  border-bottom-color: rgba(13, 27, 62, 0.08);
+}
+
+:host-context([data-theme="light"]) .bot-identity h3 {
+  color: #0D1B3E;
+}
+
+:host-context([data-theme="light"]) .status-text {
+  color: #6B7CA8;
+}
+
+:host-context([data-theme="light"]) .clear-btn {
+  background: rgba(13, 27, 62, 0.04);
+  border-color: rgba(13, 27, 62, 0.1);
+  color: #6B7CA8;
+}
+
+:host-context([data-theme="light"]) .clear-btn:hover {
+  background: rgba(192, 57, 43, 0.07);
+  border-color: rgba(192, 57, 43, 0.22);
+  color: #c0392b;
+}
+
+/* Messages area */
+:host-context([data-theme="light"]) .messages-area::-webkit-scrollbar-thumb {
+  background: rgba(41, 82, 200, 0.2);
+}
+
+/* Bot bubble */
+:host-context([data-theme="light"]) .bot-bubble {
+  background: #F0F4FF;
+  border-color: rgba(13, 27, 62, 0.1);
+  color: #0D1B3E;
+}
+
+/* User bubble */
+:host-context([data-theme="light"]) .user-bubble {
+  background: linear-gradient(135deg, rgba(255, 190, 92, 0.18), rgba(245, 124, 81, 0.12));
+  border-color: rgba(255, 190, 92, 0.35);
+  color: #1A3060;
+}
+
+:host-context([data-theme="light"]) .timestamp {
+  color: #A0B0D0;
+}
+
+:host-context([data-theme="light"]) .cards-label {
+  color: #6B7CA8;
+}
+
+/* Candidate cards in chat */
+:host-context([data-theme="light"]) .candidate-card {
+  background: #F8FAFF;
+  border-color: rgba(13, 27, 62, 0.1);
+}
+
+:host-context([data-theme="light"]) .candidate-card:hover {
+  border-color: rgba(255, 190, 92, 0.5);
+  background: #EEF2FF;
+  box-shadow: 0 6px 18px rgba(41, 82, 200, 0.1);
+}
+
+:host-context([data-theme="light"]) .card-meta h4 {
+  color: #0D1B3E;
+}
+
+:host-context([data-theme="light"]) .card-role {
+  color: #6B7CA8;
+}
+
+:host-context([data-theme="light"]) .card-exp {
+  color: #6B7CA8;
+}
+
+:host-context([data-theme="light"]) .card-footer {
+  border-top-color: rgba(13, 27, 62, 0.07);
+  color: #2952C8;
+}
+
+:host-context([data-theme="light"]) .skill-chip {
+  background: rgba(41, 82, 200, 0.08);
+  border-color: rgba(41, 82, 200, 0.2);
+  color: #1A3BA0;
+}
+
+:host-context([data-theme="light"]) .skill-more {
+  color: #8A9BC0;
+}
+
+/* Thinking row */
+:host-context([data-theme="light"]) .thinking-label {
+  color: #6B7CA8;
+}
+
+/* Input area */
+:host-context([data-theme="light"]) .input-area {
+  background: rgba(238, 242, 255, 0.55);
+  border-top-color: rgba(13, 27, 62, 0.08);
+}
+
+:host-context([data-theme="light"]) .input-box {
+  background: #FFFFFF;
+  border-color: rgba(13, 27, 62, 0.14);
+}
+
+:host-context([data-theme="light"]) .chat-input {
+  background: transparent;
+  color: #0D1B3E;
+}
+
+:host-context([data-theme="light"]) .chat-input::placeholder {
+  color: #A0B0D0;
+}
+
+:host-context([data-theme="light"]) .input-hint {
+  color: #A0B0D0;
+}
+
+:host-context([data-theme="light"]) kbd {
+  color: #A0B0D0;
+}
+
+/* Welcome dashboard */
+:host-context([data-theme="light"]) .welcome-header h2 {
+  color: #0D1B3E;
+}
+
+:host-context([data-theme="light"]) .welcome-header p {
+  color: #6B7CA8;
+}
+
+:host-context([data-theme="light"]) .suggestion-card {
+  background: rgba(238, 242, 255, 0.55);
+  border-color: rgba(13, 27, 62, 0.08);
+}
+
+:host-context([data-theme="light"]) .suggestion-card:hover {
+  background: rgba(238, 242, 255, 0.95);
+  border-color: rgba(255, 190, 92, 0.4);
+  box-shadow: 0 10px 25px rgba(41, 82, 200, 0.08);
+}
+
+:host-context([data-theme="light"]) .suggestion-content h4 {
+  color: #2952C8;
+}
+
+:host-context([data-theme="light"]) .suggestion-content p {
+  color: #6B7CA8;
+}
+
+:host-context([data-theme="light"]) .suggestion-icon {
+  background: rgba(41, 82, 200, 0.07);
+  border-color: rgba(41, 82, 200, 0.18);
+}
+
+:host-context([data-theme="light"]) .suggestion-card:hover .suggestion-icon {
+  background: rgba(255, 190, 92, 0.15);
+  border-color: rgba(255, 190, 92, 0.45);
+}
+
+:host-context([data-theme="light"]) .send-btn {
+  background: linear-gradient(135deg, #4F46E5, #7C3AED);
+  color: white;
+}
+
+:host-context([data-theme="light"]) .send-btn:hover:not(:disabled) {
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+}
+
 
 

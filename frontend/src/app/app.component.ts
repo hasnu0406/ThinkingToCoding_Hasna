@@ -44,6 +44,9 @@ export class AppComponent {
   // ── Auth State ────────────────────────────────────────────────────
   currentUser: { name: string; email: string; token: string } | null = null;
 
+  // ── Theme State ───────────────────────────────────────────────────
+  isDarkTheme = true;
+
   // ── Navigation State ──────────────────────────────────────────────
   activeView: 'dashboard' | 'database' | 'upload' | 'search' | 'history' | 'chatbot' = 'dashboard';
 
@@ -63,6 +66,13 @@ export class AppComponent {
   isLoadingHistory = false;
 
   constructor() {
+    // Load saved theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+      this.isDarkTheme = false;
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
       try {
@@ -72,6 +82,14 @@ export class AppComponent {
         localStorage.removeItem('currentUser');
       }
     }
+  }
+
+  // ── Theme Toggle ──────────────────────────────────────────────────
+  toggleTheme(): void {
+    this.isDarkTheme = !this.isDarkTheme;
+    const theme = this.isDarkTheme ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
   }
 
   // ── Auth Handlers ─────────────────────────────────────────────────

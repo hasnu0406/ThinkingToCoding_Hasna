@@ -33,7 +33,7 @@
         </li>
         <li class="nav-item chatbot-nav" [class.active]="activeView === 'chatbot'" (click)="setView('chatbot')">
           <span class="nav-icon">💬</span>
-          <span class="nav-text">🔮 RecruitAI</span>
+          <span class="nav-text">RecruitAI</span>
         </li>
         <li class="nav-item" [class.active]="activeView === 'history'" (click)="setView('history')">
           <span class="nav-icon">⏱️</span>
@@ -46,6 +46,10 @@
       </ul>
 
       <div class="sidebar-footer">
+        <button class="theme-toggle-btn" (click)="toggleTheme()" [title]="isDarkTheme ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+          <span class="theme-toggle-icon">{{ isDarkTheme ? '☀️' : '🌙' }}</span>
+          <span>{{ isDarkTheme ? 'Light Mode' : 'Dark Mode' }}</span>
+        </button>
         <div class="status-indicator">
           <span class="pulse-dot"></span>
           <span>Engine Active (v1.0.0)</span>
@@ -119,7 +123,7 @@
           <div class="card-header">
             <div class="icon-circle">💬</div>
             <div>
-              <h3>🔮 RecruitAI - AI Chat Search</h3>
+              <h3>RecruitAI - AI Chat Search</h3>
               <p>Chat naturally with the AI to find the best candidates. Just describe what you need in plain English!</p>
             </div>
           </div>
