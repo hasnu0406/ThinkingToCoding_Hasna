@@ -8,6 +8,7 @@ DB_NAME = os.getenv("DB_NAME")
 COLLECTION_NAME = os.getenv("COLLECTION_NAME")
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "groq").lower()
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+GOOGLE_DRIVE_FOLDER_ID = os.getenv("GOOGLE_DRIVE_FOLDER_ID")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # Multi-key support: comma-separated list in GROQ_API_KEYS, fallback to single GROQ_API_KEY

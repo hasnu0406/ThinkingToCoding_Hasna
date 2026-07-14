@@ -531,7 +531,7 @@
             </div>
           </div>
  
-          <div class="history-actions" style="margin-bottom: 20px; display: flex; gap: 10px;">
+          <div class="history-actions">
             <button type="button" class="premium-btn btn-ghost" (click)="loadSearchHistory()" [disabled]="isLoadingHistory">
               <span *ngIf="!isLoadingHistory">🔄 Refresh History</span>
               <span *ngIf="isLoadingHistory" class="loading">Loading...</span>
@@ -541,7 +541,7 @@
             </button>
           </div>
  
-          <div *ngIf="isLoadingHistory" style="text-align: center; padding: 40px;">
+          <div *ngIf="isLoadingHistory" class="history-loading">
             <p>Loading chat history...</p>
           </div>
  
@@ -554,11 +554,11 @@
                   <p class="history-timestamp">Last active: {{ session.updated_at | date: 'short' }}</p>
                   <p class="history-results" *ngIf="session.messages">Contains {{ session.messages.length }} messages</p>
                 </div>
-                <div style="display: flex; gap: 10px; align-items: center;">
+                <div class="history-item-actions">
                   <button type="button" class="premium-btn btn-secondary" (click)="viewHistorySearch(session)">
                     Resume Chat ➜
                   </button>
-                  <button type="button" class="premium-btn btn-danger" style="padding: 10px 14px;" (click)="deleteChatSession(session.id)" title="Delete session">
+                  <button type="button" class="premium-btn btn-danger history-delete-btn" (click)="deleteChatSession(session.id)" title="Delete session">
                     🗑️
                   </button>
                 </div>
@@ -566,10 +566,10 @@
             </div>
           </div>
  
-          <div *ngIf="!isLoadingHistory && chatSessions.length === 0" class="empty-search-state" style="text-align: center; padding: 60px 20px;">
-            <p style="font-size: 18px;">No chat history found</p>
+          <div *ngIf="!isLoadingHistory && chatSessions.length === 0" class="empty-search-state history-empty-state">
+            <p class="empty-state-text">No chat history found</p>
             <small>Start chatting with SearchBot to build your history. Each conversation will be saved here for quick reference.</small>
-            <button type="button" class="premium-btn btn-primary" (click)="setView('chatbot')" style="margin-top: 20px;">
+            <button type="button" class="premium-btn btn-primary empty-state-btn" (click)="setView('chatbot')">
               Start Chatting
             </button>
           </div>

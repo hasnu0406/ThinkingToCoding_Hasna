@@ -4,6 +4,7 @@
   flex-direction: column;
   height: 680px;
   background: rgba(10, 14, 26, 0.6);
+  -webkit-backdrop-filter: blur(18px);
   backdrop-filter: blur(18px);
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 16px;
@@ -686,6 +687,7 @@ kbd {
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   text-align: left;
   box-sizing: border-box;
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
 
