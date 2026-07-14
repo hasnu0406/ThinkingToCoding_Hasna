@@ -1,1 +1,185 @@
-/* Upload styles inherited from global app.component.css */
+/* ==================== Upload Views Console ==================== */
+.upload-zone-wrapper {
+  margin-top: 20px;
+}
+
+.drag-drop-area {
+  border: 2px dashed rgba(255, 190, 92, 0.25);
+  background: rgba(255, 190, 92, 0.02);
+  border-radius: 20px;
+  padding: 50px 30px;
+  text-align: center;
+  margin-bottom: 25px;
+  transition: all 0.3s ease;
+}
+
+.drag-drop-area:hover {
+  background: rgba(255, 190, 92, 0.04);
+  border-color: rgba(255, 190, 92, 0.5);
+}
+
+.upload-graphic {
+  font-size: 3.5rem;
+  margin-bottom: 15px;
+  filter: drop-shadow(0 0 10px rgba(255, 190, 92, 0.15));
+}
+
+.drag-drop-area h4 {
+  font-size: 1.3rem;
+  color: #f5efe6;
+  margin: 0 0 8px;
+}
+
+/* ── File Upload Label (hides raw browser input) ── */
+.file-upload {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 12px 28px;
+  background: linear-gradient(135deg, rgba(255, 190, 92, 0.15), rgba(245, 124, 81, 0.1));
+  border: 1.5px dashed rgba(255, 190, 92, 0.5);
+  border-radius: 12px;
+  color: #ffbe5c;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.02em;
+}
+
+.file-upload:hover {
+  background: linear-gradient(135deg, rgba(255, 190, 92, 0.25), rgba(245, 124, 81, 0.18));
+  border-color: rgba(255, 190, 92, 0.8);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255, 190, 92, 0.15);
+}
+
+/* Hide the raw browser file input entirely */
+.file-upload input[type="file"] {
+  display: none;
+}
+
+.upload-files-list {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 20px;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 15px !important;
+  width: 100%;
+}
+
+.file-item-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.file-pill {
+  background: rgba(255, 190, 92, 0.12);
+  border: 1px solid rgba(255, 190, 92, 0.25);
+  color: #ffcc99;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.upload-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+/* ==================== File Meta ==================== */
+.file-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 10px;
+  color: #d2dae6;
+  font-size: 0.9rem;
+}
+
+.file-list {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.file-list span,
+.file-list small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-list small {
+  color: #8fa0b2;
+}
+
+.text-btn {
+  background: none;
+  border: none;
+  color: #ffcc99;
+  cursor: pointer;
+  font-weight: 700;
+  padding: 4px 0;
+}
+
+/* ==================== LIGHT THEME OVERRIDES ==================== */
+:host-context([data-theme="light"]) .drag-drop-area {
+  border-color: rgba(255, 190, 92, 0.38);
+  background: rgba(238, 242, 255, 0.4);
+}
+
+:host-context([data-theme="light"]) .drag-drop-area:hover {
+  background: rgba(238, 242, 255, 0.75);
+  border-color: rgba(255, 190, 92, 0.62);
+}
+
+:host-context([data-theme="light"]) .drag-drop-area h4 {
+  color: #0D1B3E;
+}
+
+:host-context([data-theme="light"]) .upload-files-list {
+  background: rgba(238, 242, 255, 0.5);
+  border-color: rgba(13, 27, 62, 0.08);
+}
+
+:host-context([data-theme="light"]) .file-meta {
+  background: rgba(238, 242, 255, 0.6);
+  color: #374163;
+}
+
+:host-context([data-theme="light"]) .file-list small {
+  color: #6B7CA8;
+}
+
+:host-context([data-theme="light"]) .file-upload {
+  background: linear-gradient(135deg, rgba(255, 190, 92, 0.1), rgba(245, 124, 81, 0.07));
+  border-color: rgba(255, 190, 92, 0.45);
+  color: #2952C8;
+}
+
+:host-context([data-theme="light"]) .file-upload:hover {
+  background: linear-gradient(135deg, rgba(255, 190, 92, 0.2), rgba(245, 124, 81, 0.14));
+  border-color: rgba(255, 190, 92, 0.7);
+  box-shadow: 0 8px 24px rgba(255, 190, 92, 0.12);
+}
+
+:host-context([data-theme="light"]) .file-pill {
+  background: rgba(41, 82, 200, 0.08);
+  border-color: rgba(41, 82, 200, 0.2);
+  color: #1A3BA0;
+}
+
+:host-context([data-theme="light"]) .text-btn {
+  color: #2952C8;
+}

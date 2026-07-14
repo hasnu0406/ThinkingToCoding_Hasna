@@ -1,1 +1,608 @@
-/* Database styles inherited from global app.component.css */
+/* ==================== Workspace Section ==================== */
+.workspace-section {
+  padding: 60px 40px;
+  background: linear-gradient(135deg, rgba(13, 27, 42, 0.5) 0%, rgba(16, 37, 63, 0.5) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.workspace-container {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 30px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ==================== Candidates Sidebar ==================== */
+.candidates-sidebar {
+  background: linear-gradient(135deg, rgba(9, 16, 30, 0.8), rgba(15, 28, 45, 0.8));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 25px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  height: fit-content;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-header h2 {
+  font-size: 1.3rem;
+  color: #f5efe6;
+  margin: 0;
+  font-family: Georgia, serif;
+}
+
+.candidate-count {
+  margin: 6px 0 0;
+  color: #8fa0b2;
+  font-size: 0.9rem;
+}
+
+.sidebar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: #ffcc99;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: rgba(255, 190, 92, 0.15);
+  transform: rotate(10deg);
+}
+
+.icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.icon-btn.danger:hover:not(:disabled) {
+  background: rgba(220, 53, 69, 0.15);
+  color: #ff6b6b;
+}
+
+.candidates-list {
+  display: grid;
+  gap: 12px;
+}
+
+.candidate-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.candidate-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 190, 92, 0.3);
+  transform: translateX(5px);
+}
+
+.candidate-item.active {
+  background: linear-gradient(135deg, rgba(255, 190, 92, 0.2), rgba(245, 124, 81, 0.15));
+  border-color: rgba(255, 190, 92, 0.4);
+  box-shadow: 0 0 20px rgba(255, 190, 92, 0.1);
+}
+
+.candidate-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.rank-badge {
+  background: linear-gradient(135deg, rgba(255, 190, 92, 0.3), rgba(245, 124, 81, 0.3));
+  border: 1px solid rgba(255, 190, 92, 0.4);
+  color: #ffcc99;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.candidate-info h4 {
+  font-size: 1rem;
+  color: #f5efe6;
+  margin: 0 0 5px;
+}
+
+.candidate-info p {
+  font-size: 0.85rem;
+  color: #a0b0c0;
+  margin: 0 0 3px;
+}
+
+.candidate-info .experience {
+  font-size: 0.8rem;
+  color: #7a8899;
+}
+
+.skills-preview {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.skill-tag {
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  background: rgba(83, 163, 214, 0.2);
+  color: #9dcdff;
+  border-radius: 10px;
+}
+
+.skill-more {
+  font-size: 0.7rem;
+  color: #7a8899;
+  padding: 4px 8px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #7a8899;
+}
+
+.empty-state p {
+  margin: 0 0 5px;
+  font-weight: 600;
+}
+
+.empty-state small {
+  color: #5a7088;
+  display: block;
+}
+
+/* ==================== Detail Panel ==================== */
+.detail-panel {
+  background: linear-gradient(135deg, rgba(9, 16, 30, 0.8), rgba(15, 28, 45, 0.8));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 35px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.candidate-header {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.avatar {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #ffbe5c, #f57c51);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #08111f;
+  box-shadow: 0 10px 30px rgba(255, 190, 92, 0.2);
+}
+
+.candidate-meta h2 {
+  font-size: 1.8rem;
+  color: #f5efe6;
+  margin: 0 0 8px;
+  font-family: Georgia, serif;
+}
+
+.role-badge {
+  color: #ffcc99;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.panel-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.panel-content {
+  display: grid;
+  gap: 30px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 20px;
+}
+
+.info-item {
+  background: rgba(255, 255, 255, 0.02);
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.info-label {
+  display: block;
+  color: #7a8899;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.info-value {
+  color: #f5efe6;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.section-block {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.section-title {
+  font-size: 1.2rem;
+  color: #f5efe6;
+  margin: 0 0 15px;
+  font-family: Georgia, serif;
+}
+
+.skills-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.skill-badge {
+  background: linear-gradient(135deg, rgba(83, 163, 214, 0.2), rgba(147, 197, 253, 0.1));
+  border: 1px solid rgba(83, 163, 214, 0.3);
+  color: #9dcdff;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.skill-badge:hover {
+  background: linear-gradient(135deg, rgba(83, 163, 214, 0.3), rgba(147, 197, 253, 0.2));
+  border-color: rgba(83, 163, 214, 0.5);
+  transform: translateY(-3px);
+}
+
+.recommendations {
+  display: grid;
+  gap: 10px;
+}
+
+.recommendation-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(245, 124, 81, 0.08);
+  border-left: 3px solid #f57c51;
+  border-radius: 8px;
+  color: #ffd6c8;
+}
+
+.job-icon {
+  font-size: 1.2rem;
+}
+
+.timeline {
+  display: grid;
+  gap: 15px;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+}
+
+.timeline-marker {
+  width: 12px;
+  height: 12px;
+  background: #ffbe5c;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+  box-shadow: 0 0 10px rgba(255, 190, 92, 0.3);
+}
+
+.timeline-item p {
+  color: #d2dae6;
+  margin: 0;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+}
+
+.empty-detail {
+  min-height: 360px;
+  display: grid;
+  place-items: center;
+}
+
+.panel-placeholder {
+  text-align: center;
+  max-width: 420px;
+}
+
+.panel-placeholder h2 {
+  color: #f5efe6;
+  margin: 0 0 10px;
+  font-family: Georgia, serif;
+}
+
+.panel-placeholder p {
+  color: #a0b0c0;
+  line-height: 1.7;
+}
+
+/* ==================== Database Workspace Customizations ==================== */
+.workspace-viewport {
+  gap: 0px !important;
+}
+
+.workspace-viewport .workspace-container {
+  width: 100%;
+  max-width: 100%;
+}
+
+.workspace-viewport .candidates-sidebar {
+  max-height: 700px;
+}
+
+.workspace-viewport .detail-panel {
+  min-height: 700px;
+}
+
+.empty-sub-state {
+  text-align: center;
+  padding: 20px;
+  font-size: 0.85rem;
+  color: #7a8899;
+  background: rgba(255, 255, 255, 0.01);
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.05);
+}
+
+/* Detail grid */
+.detail-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-bottom: 18px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.chips span {
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(141, 199, 255, 0.14);
+  color: #dceeff;
+  font-size: 0.9rem;
+}
+
+.chips.accent span {
+  background: rgba(245, 124, 81, 0.16);
+  color: #ffd6c8;
+}
+
+/* ==================== LIGHT THEME OVERRIDES ==================== */
+:host-context([data-theme="light"]) .candidates-sidebar {
+  background: #FFFFFF;
+  border-color: rgba(13, 27, 62, 0.08);
+  box-shadow: 0 4px 20px rgba(13, 27, 62, 0.06);
+}
+
+:host-context([data-theme="light"]) .sidebar-header {
+  border-bottom-color: rgba(13, 27, 62, 0.07);
+}
+
+:host-context([data-theme="light"]) .sidebar-header h2 {
+  color: #0D1B3E;
+}
+
+:host-context([data-theme="light"]) .candidate-count {
+  color: #6B7CA8;
+}
+
+:host-context([data-theme="light"]) .icon-btn {
+  color: #2952C8;
+}
+
+:host-context([data-theme="light"]) .icon-btn:hover:not(:disabled) {
+  background: rgba(41, 82, 200, 0.08);
+}
+
+:host-context([data-theme="light"]) .candidate-item {
+  background: rgba(248, 250, 255, 0.8);
+  border-color: rgba(13, 27, 62, 0.07);
+}
+
+:host-context([data-theme="light"]) .candidate-item:hover {
+  background: #F0F4FF;
+  border-color: rgba(255, 190, 92, 0.4);
+}
+
+:host-context([data-theme="light"]) .candidate-item.active {
+  background: linear-gradient(135deg, rgba(255, 190, 92, 0.14), rgba(245, 124, 81, 0.09));
+  border-color: rgba(255, 190, 92, 0.45);
+  box-shadow: 0 0 20px rgba(255, 190, 92, 0.09);
+}
+
+:host-context([data-theme="light"]) .candidate-info h4 {
+  color: #0D1B3E;
+}
+
+:host-context([data-theme="light"]) .candidate-info p {
+  color: #6B7CA8;
+}
+
+:host-context([data-theme="light"]) .candidate-info .experience {
+  color: #8A9BC0;
+}
+
+:host-context([data-theme="light"]) .skill-tag {
+  background: rgba(41, 82, 200, 0.08);
+  color: #1A3BA0;
+}
+
+:host-context([data-theme="light"]) .empty-state {
+  color: #8A9BC0;
+}
+
+:host-context([data-theme="light"]) .empty-state small {
+  color: #A0B0D0;
+}
+
+:host-context([data-theme="light"]) .rank-badge {
+  background: linear-gradient(135deg, rgba(41, 82, 200, 0.12), rgba(255, 190, 92, 0.1));
+  border-color: rgba(41, 82, 200, 0.25);
+  color: #1A3BA0;
+}
+
+:host-context([data-theme="light"]) .detail-panel {
+  background: #FFFFFF;
+  border-color: rgba(13, 27, 62, 0.08);
+  box-shadow: 0 4px 20px rgba(13, 27, 62, 0.06);
+}
+
+:host-context([data-theme="light"]) .panel-header {
+  border-bottom-color: rgba(13, 27, 62, 0.07);
+}
+
+:host-context([data-theme="light"]) .candidate-meta h2 {
+  color: #0D1B3E;
+}
+
+:host-context([data-theme="light"]) .role-badge {
+  color: #2952C8;
+}
+
+:host-context([data-theme="light"]) .info-item {
+  background: rgba(238, 242, 255, 0.6);
+  border-color: rgba(13, 27, 62, 0.07);
+}
+
+:host-context([data-theme="light"]) .info-label {
+  color: #6B7CA8;
+}
+
+:host-context([data-theme="light"]) .info-value {
+  color: #0D1B3E;
+}
+
+:host-context([data-theme="light"]) .section-block {
+  background: rgba(238, 242, 255, 0.5);
+  border-color: rgba(13, 27, 62, 0.07);
+}
+
+:host-context([data-theme="light"]) .section-title {
+  color: #0D1B3E;
+}
+
+:host-context([data-theme="light"]) .skill-badge {
+  background: rgba(41, 82, 200, 0.08);
+  border-color: rgba(41, 82, 200, 0.22);
+  color: #1A3BA0;
+}
+
+:host-context([data-theme="light"]) .skill-badge:hover {
+  background: rgba(41, 82, 200, 0.14);
+  border-color: rgba(41, 82, 200, 0.4);
+}
+
+:host-context([data-theme="light"]) .recommendation-item {
+  background: rgba(245, 124, 81, 0.05);
+  border-left-color: #f57c51;
+  color: #4A5580;
+}
+
+:host-context([data-theme="light"]) .timeline-marker {
+  background: #ffbe5c;
+  box-shadow: 0 0 10px rgba(255, 190, 92, 0.4);
+}
+
+:host-context([data-theme="light"]) .timeline-item p {
+  color: #374163;
+  background: rgba(238, 242, 255, 0.5);
+}
+
+:host-context([data-theme="light"]) .panel-placeholder h2 {
+  color: #0D1B3E;
+}
+
+:host-context([data-theme="light"]) .panel-placeholder p {
+  color: #6B7CA8;
+}
+
+:host-context([data-theme="light"]) .chips span {
+  background: rgba(41, 82, 200, 0.08);
+  color: #1A3BA0;
+}
+
+:host-context([data-theme="light"]) .chips.accent span {
+  background: rgba(245, 124, 81, 0.1);
+  color: #c05218;
+}
+
+:host-context([data-theme="light"]) .empty-sub-state {
+  color: #8A9BC0;
+  background: rgba(238, 242, 255, 0.5);
+  border-color: rgba(13, 27, 62, 0.08);
+}

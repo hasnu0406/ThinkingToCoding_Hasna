@@ -1,1 +1,347 @@
-/* Dashboard styles inherited from global app.component.css */
+/* ==================== Dashboard Specifics ==================== */
+.dashboard-hero {
+  padding: 40px 30px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(13, 27, 42, 0.5) 0%, rgba(16, 37, 63, 0.5) 100%);
+  backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dashboard-hero .hero-title {
+  font-size: 2.8rem;
+  margin: 12px 0 6px;
+}
+
+.dashboard-hero .hero-subtitle {
+  font-size: 1.1rem;
+  margin: 0;
+  color: #a0b0c0;
+}
+
+/* Stats Counter Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, rgba(9, 16, 30, 0.8), rgba(15, 28, 45, 0.8));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 24px;
+  backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+
+.stat-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(255, 190, 92, 0.25);
+  box-shadow: 0 20px 45px rgba(255, 190, 92, 0.08);
+}
+
+.stat-icon {
+  font-size: 2rem;
+  margin-bottom: 15px;
+}
+
+.stat-details h3 {
+  font-size: 2.2rem;
+  color: #f5efe6;
+  margin: 0 0 4px;
+  font-family: Georgia, serif;
+}
+
+.stat-details p {
+  font-size: 0.9rem;
+  color: #8fa0b2;
+  margin: 0;
+}
+
+.stat-link {
+  font-size: 0.8rem;
+  color: #ffcc99;
+  font-weight: 700;
+  margin-top: 15px;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.stat-card:hover .stat-link {
+  opacity: 1;
+}
+
+/* Dashboard Split Widgets */
+.dashboard-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  width: 100%;
+}
+
+.widget-panel {
+  background: linear-gradient(135deg, rgba(9, 16, 30, 0.8), rgba(15, 28, 45, 0.8));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 24px;
+  padding: 30px;
+  backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.widget-header {
+  margin-bottom: 24px;
+}
+
+.widget-header h3 {
+  font-size: 1.3rem;
+  color: #f5efe6;
+  margin: 0 0 6px;
+  font-family: Georgia, serif;
+}
+
+.widget-header p {
+  font-size: 0.85rem;
+  color: #8fa0b2;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Skill Analytic Cloud */
+.skills-dashboard-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-content: flex-start;
+}
+
+.skill-cloud-tag {
+  background: rgba(83, 163, 214, 0.08);
+  border: 1px solid rgba(83, 163, 214, 0.2);
+  border-radius: 12px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #9dcdff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.skill-cloud-tag:hover {
+  background: rgba(255, 190, 92, 0.15);
+  border-color: rgba(255, 190, 92, 0.4);
+  color: #ffcc99;
+  transform: translateY(-2px);
+}
+
+.skill-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.skill-count {
+  font-size: 0.75rem;
+  background: rgba(255, 255, 255, 0.08);
+  color: #dde5ee;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.skill-cloud-tag:hover .skill-count {
+  background: rgba(0, 0, 0, 0.2);
+  color: #ffbe5c;
+}
+
+.empty-widget-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #7a8899;
+  width: 100%;
+}
+
+.empty-widget-state p {
+  font-weight: 600;
+  margin: 0 0 4px;
+}
+
+.empty-widget-state small {
+  font-size: 0.8rem;
+}
+
+/* Recent Candidates widget list */
+.recent-profiles-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recent-profile-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px 18px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.recent-profile-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 190, 92, 0.2);
+  transform: translateX(4px);
+}
+
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(83, 163, 214, 0.2), rgba(255, 190, 92, 0.15));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #ffbe5c;
+}
+
+.profile-meta {
+  flex: 1;
+}
+
+.profile-meta h4 {
+  margin: 0 0 3px;
+  font-size: 0.95rem;
+  color: #f5efe6;
+}
+
+.profile-meta p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #a0b0c0;
+}
+
+.profile-meta .exp {
+  color: #7a8899;
+}
+
+.profile-arrow {
+  color: #7a8899;
+  font-size: 0.9rem;
+  transition: transform 0.2s ease;
+}
+
+.recent-profile-item:hover .profile-arrow {
+  color: #ffbe5c;
+  transform: translateX(3px);
+}
+
+/* ==================== LIGHT THEME OVERRIDES ==================== */
+:host-context([data-theme="light"]) .dashboard-hero {
+  background: linear-gradient(135deg, rgba(238, 242, 255, 0.9), rgba(220, 228, 255, 0.85));
+  border-color: rgba(13, 27, 62, 0.08);
+}
+
+:host-context([data-theme="light"]) .dashboard-hero .hero-subtitle {
+  color: #4A5580;
+}
+
+:host-context([data-theme="light"]) .stat-card {
+  background: #FFFFFF;
+  border-color: rgba(13, 27, 62, 0.08);
+  box-shadow: 0 4px 20px rgba(13, 27, 62, 0.06);
+}
+
+:host-context([data-theme="light"]) .stat-card:hover {
+  border-color: rgba(255, 190, 92, 0.45);
+  box-shadow: 0 14px 40px rgba(255, 190, 92, 0.13);
+}
+
+:host-context([data-theme="light"]) .stat-details h3 {
+  color: #0D1B3E;
+}
+
+:host-context([data-theme="light"]) .stat-details p {
+  color: #6B7CA8;
+}
+
+:host-context([data-theme="light"]) .stat-link {
+  color: #2952C8;
+}
+
+:host-context([data-theme="light"]) .widget-panel {
+  background: #FFFFFF;
+  border-color: rgba(13, 27, 62, 0.08);
+  box-shadow: 0 4px 20px rgba(13, 27, 62, 0.06);
+}
+
+:host-context([data-theme="light"]) .widget-header h3 {
+  color: #0D1B3E;
+}
+
+:host-context([data-theme="light"]) .widget-header p {
+  color: #6B7CA8;
+}
+
+:host-context([data-theme="light"]) .empty-widget-state {
+  color: #8A9BC0;
+}
+
+:host-context([data-theme="light"]) .skill-cloud-tag {
+  background: rgba(41, 82, 200, 0.06);
+  border-color: rgba(41, 82, 200, 0.18);
+  color: #1A3BA0;
+}
+
+:host-context([data-theme="light"]) .skill-cloud-tag:hover {
+  background: rgba(255, 190, 92, 0.14);
+  border-color: rgba(255, 190, 92, 0.5);
+  color: #8B5A00;
+}
+
+:host-context([data-theme="light"]) .skill-count {
+  background: rgba(13, 27, 62, 0.08);
+  color: #5A6B8A;
+}
+
+:host-context([data-theme="light"]) .skill-cloud-tag:hover .skill-count {
+  background: rgba(0, 0, 0, 0.07);
+  color: #f57c51;
+}
+
+:host-context([data-theme="light"]) .recent-profile-item {
+  background: rgba(238, 242, 255, 0.6);
+  border-color: rgba(13, 27, 62, 0.07);
+}
+
+:host-context([data-theme="light"]) .recent-profile-item:hover {
+  background: rgba(238, 242, 255, 0.9);
+  border-color: rgba(255, 190, 92, 0.35);
+}
+
+:host-context([data-theme="light"]) .profile-meta h4 {
+  color: #0D1B3E;
+}
+
+:host-context([data-theme="light"]) .profile-meta p {
+  color: #6B7CA8;
+}
+
+:host-context([data-theme="light"]) .profile-arrow {
+  color: #8A9BC0;
+}
+
+:host-context([data-theme="light"]) .recent-profile-item:hover .profile-arrow {
+  color: #f57c51;
+}
