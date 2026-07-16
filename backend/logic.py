@@ -99,7 +99,13 @@ def rank_candidates(candidates: list[dict[str, Any]], filters: dict[str, Any]) -
         candidate["rank_score"] = score
         ranked.append(candidate)
     
-    return sorted(ranked, key=lambda x: x["rank_score"], reverse=True)
+    sorted_ranked = sorted(ranked, key=lambda x: x["rank_score"], reverse=True)
+    has_active_filters = bool(filters.get("skills") or filters.get("role_keyword") or filters.get("min_experience") or filters.get("max_experience"))
+    
+    if has_active_filters:
+        return [c for c in sorted_ranked if c["rank_score"] > 0]
+        
+    return sorted_ranked
 
 
 def check_duplicate(file_bytes: bytes, filename: str) -> str | None:
