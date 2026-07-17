@@ -32,3 +32,16 @@ Thumbs.db
 # Archives
 *.zip
 
+# Uploads
+backend/uploads/
+
+# Google Drive API credentials
+credentials.json
+backend/credentials.json
+token.pickle
+token.json
+backend/token.json
+
+# Testing scripts
+test_upload.py
+test_*.py

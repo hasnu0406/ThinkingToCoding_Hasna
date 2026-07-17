@@ -2,6 +2,9 @@ import datetime
 import hashlib
 from typing import Any
 from fastapi import APIRouter, File, Query, UploadFile
+from fastapi.responses import FileResponse, StreamingResponse
+import os
+from fpdf import FPDF
 
 from models import UpdateCandidateRequest
 from database import resume_collection
@@ -9,6 +12,7 @@ from constants import ALLOWED_TYPES, ALLOWED_EXTENSIONS
 from ai import ai_extract_resume, ai_recommend_jobs
 from logic import check_duplicate, extract_text_from_upload
 from utils import _serialize, _get_object_id, _error
+import drive_service
 
 router = APIRouter(prefix="/resume", tags=["Resume"])
 
@@ -40,9 +44,37 @@ async def upload_resume(file: UploadFile = File(...)) -> dict[str, Any]:
 
     parsed = ai_extract_resume(resume_text)
     recommended_jobs = ai_recommend_jobs(parsed)
+    
+    file_hash = hashlib.sha256(file_bytes).hexdigest()
+    pdf_filename = f"{file_hash}.pdf"
+    pdf_path = os.path.join("uploads", pdf_filename)
+    os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
+    
+    # Save as PDF temporarily
+    if file_kind == "pdf":
+        with open(pdf_path, "wb") as f:
+            f.write(file_bytes)
+    else:
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("helvetica", size=12)
+        # Sanitize text to latin-1 to avoid fpdf character errors
+        clean_text = resume_text.encode('latin-1', 'replace').decode('latin-1')
+        pdf.multi_cell(0, 10, text=clean_text)
+        pdf.output(pdf_path)
+
+    # Upload to Google Drive
+    with open(pdf_path, "rb") as f:
+        drive_file_id = drive_service.upload_to_drive(f.read(), pdf_filename)
+        
+    # Clean up local file
+    if os.path.exists(pdf_path):
+        os.remove(pdf_path)
+
     document = {
         "file_name": file.filename,
-        "file_hash": hashlib.sha256(file_bytes).hexdigest(),
+        "file_hash": file_hash,
+        "drive_file_id": drive_file_id,
         "name": parsed.get("name", "Unknown"),
         "age": parsed.get("age", "Not specified"),
         "experience": parsed.get("experience", "fresher"),
@@ -120,10 +152,42 @@ def update_resume(id: str, updates: UpdateCandidateRequest) -> dict[str, Any]:
 
 @router.delete("/{id}")
 def delete_resume(id: str) -> dict[str, str]:
-    result = resume_collection.delete_one({"_id": _get_object_id(id)})
-    if result.deleted_count == 0:
+    document = resume_collection.find_one({"_id": _get_object_id(id)})
+    if not document:
         raise _error(404, "Resume not found.", "not_found")
+        
+    result = resume_collection.delete_one({"_id": _get_object_id(id)})
+    if result.deleted_count > 0:
+        drive_file_id = document.get("drive_file_id")
+        if drive_file_id:
+            drive_service.delete_from_drive(drive_file_id)
+            
+        pdf_path = document.get("pdf_path")
+        if pdf_path and os.path.exists(pdf_path):
+            os.remove(pdf_path)
+            
     return {"message": "Resume deleted successfully."}
+
+@router.get("/{id}/download")
+def download_resume(id: str):
+    document = resume_collection.find_one({"_id": _get_object_id(id)})
+    if not document:
+        raise _error(404, "Resume not found.", "not_found")
+        
+    drive_file_id = document.get("drive_file_id")
+    if drive_file_id:
+        file_stream = drive_service.download_from_drive(drive_file_id)
+        return StreamingResponse(
+            file_stream, 
+            media_type="application/pdf", 
+            headers={"Content-Disposition": f"attachment; filename=\"{document.get('file_name', 'resume')}.pdf\""}
+        )
+        
+    pdf_path = document.get("pdf_path")
+    if not pdf_path or not os.path.exists(pdf_path):
+        raise _error(404, "PDF file not found on server.", "not_found")
+        
+    return FileResponse(pdf_path, media_type="application/pdf", filename=f"{document.get('name', 'resume')}.pdf")
 
 
 @router.get("/{id}/recommend")

@@ -106,6 +106,9 @@
                 <span class="skill-more" *ngIf="c.skills.length > 4">+{{ c.skills.length - 4 }}</span>
               </div>
               <div class="card-footer">
+                <button class="download-pdf-btn" (click)="$event.stopPropagation(); downloadResume(c)" title="Download Resume PDF">
+                  📥 Download PDF
+                </button>
                 <span>View Full Profile ➜</span>
               </div>
             </div>

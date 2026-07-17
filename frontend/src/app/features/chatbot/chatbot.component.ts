@@ -147,6 +147,12 @@ export class ChatbotComponent implements AfterViewChecked, OnChanges {
       .replace(/\n/g, '<br>');
   }
 
+  downloadResume(candidate: CandidateProfile): void {
+    if (candidate && candidate.id) {
+      this.api.downloadResumePdf(candidate.id);
+    }
+  }
+
   getInitial(name: string): string {
     return name ? name.charAt(0).toUpperCase() : '?';
   }

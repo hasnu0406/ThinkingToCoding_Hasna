@@ -68,7 +68,11 @@ export class ApiService {
   }
 
   deleteResume(candidateId: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/resume/${candidateId}`);
+    return this.http.delete<any>(`${this.baseUrl}/resume/${candidateId}`);
+  }
+
+  downloadResumePdf(candidateId: string): void {
+    window.open(`${this.baseUrl}/resume/${candidateId}/download`, '_blank');
   }
 
   getSearchHistory(limit: number = 20): Observable<SearchHistory[]> {
