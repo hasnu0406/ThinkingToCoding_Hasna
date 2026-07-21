@@ -363,12 +363,14 @@ Return ONLY the JSON matching the schema."""
         min_exp = response.get("min_experience_years")
         max_exp = response.get("max_experience_years")
         experience = min_exp if min_exp is not None else fallback.get("experience")
+        requests_resumes = response.get("requests_resumes", False)
         return {
             "skills": [s.lower().strip() for s in skills if s],
             "experience": experience,
             "min_experience": min_exp,
             "max_experience": max_exp,
             "role_keyword": response.get("role_keyword"),
+            "requests_resumes": requests_resumes
         }
     return fallback
 
@@ -423,7 +425,7 @@ def ai_chatbot_reply(conversation: list[dict], ranked_candidates: list[dict], fi
 
 The user's search has already been processed by our intelligent ranking engine. You must use the provided search results and conversation context to assist the user naturally and accurately.
 
-Available Search Results:
+Available Search Results (Total matched: {len(ranked_candidates)}):
 {ranked_text}
 
 Extracted Search Filters:
@@ -436,8 +438,11 @@ Your Responsibilities:
 
 1. Candidate Search
 - If the user makes a relevant candidate search request, present the top matching candidates clearly and naturally.
+- State exactly how many candidates were matched based on the "Total matched" count provided. Never invent or misstate this number.
+- You MUST list and describe EVERY SINGLE candidate provided in the Available Search Results. Do not omit any candidate.
 - Include each candidate's: Name, Current role, Experience, Skills, and Match score.
-- If no candidates match, clearly state that no exact matches were found and, if possible, suggest nearby or related profiles available in the provided search results.
+- After summarizing the candidates, you MUST explicitly ask the user: "Would you like to view and download their resumes?"
+- If no candidates match, clearly state that no exact matches were found and suggest nearby or related profiles if available.
 - Never invent, infer, or fabricate candidate profiles or search results. Only use the information provided in the Available Search Results.
 
 2. Follow-up Questions

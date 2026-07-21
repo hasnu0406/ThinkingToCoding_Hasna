@@ -157,8 +157,15 @@ def chat(data: ChatMessageSendRequest, background_tasks: BackgroundTasks) -> dic
     
     # 3. Retrieve and rank candidates
     all_candidates = [_serialize(d) for d in resume_collection.find({})]
-    ranked_results = rank_candidates(all_candidates, filters)
-    top_results = ranked_results[:10]
+    has_active_filters = bool(filters.get("skills") or filters.get("role_keyword") or filters.get("min_experience") or filters.get("max_experience"))
+    
+    if has_active_filters:
+        ranked_results = rank_candidates(all_candidates, filters)
+        top_results = ranked_results[:10]
+    else:
+        top_results = []
+        
+    ui_candidates = top_results if filters.get("requests_resumes") else []
     
     # Append the new user message for the LLM reply context
     messages_history.append({
@@ -181,7 +188,7 @@ def chat(data: ChatMessageSendRequest, background_tasks: BackgroundTasks) -> dic
     assistant_message_doc = {
         "role": "assistant",
         "content": reply,
-        "candidates": top_results,
+        "candidates": ui_candidates,
         "timestamp": datetime.datetime.utcnow().isoformat()
     }
     
@@ -215,5 +222,5 @@ def chat(data: ChatMessageSendRequest, background_tasks: BackgroundTasks) -> dic
         "session_id": session_id,
         "title": title,
         "reply": reply,
-        "candidates": top_results
+        "candidates": ui_candidates
     }

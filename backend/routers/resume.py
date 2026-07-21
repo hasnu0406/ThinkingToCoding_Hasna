@@ -1,5 +1,6 @@
 import datetime
 import hashlib
+import bson
 from typing import Any
 from fastapi import APIRouter, File, Query, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
@@ -45,8 +46,10 @@ async def upload_resume(file: UploadFile = File(...)) -> dict[str, Any]:
     parsed = ai_extract_resume(resume_text)
     recommended_jobs = ai_recommend_jobs(parsed)
     
+    candidate_id = bson.ObjectId()
+    
     file_hash = hashlib.sha256(file_bytes).hexdigest()
-    pdf_filename = f"{file_hash}.pdf"
+    pdf_filename = f"{str(candidate_id)}.pdf"
     pdf_path = os.path.join("uploads", pdf_filename)
     os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
     
@@ -71,11 +74,13 @@ async def upload_resume(file: UploadFile = File(...)) -> dict[str, Any]:
     if os.path.exists(pdf_path):
         os.remove(pdf_path)
 
+    candidate_name = parsed.get("name", "Unknown")
+    
     document = {
-        "file_name": file.filename,
+        "_id": candidate_id,
         "file_hash": file_hash,
         "drive_file_id": drive_file_id,
-        "name": parsed.get("name", "Unknown"),
+        "name": candidate_name,
         "age": parsed.get("age", "Not specified"),
         "experience": parsed.get("experience", "fresher"),
         "skills": parsed.get("skills", []),
@@ -177,10 +182,11 @@ def download_resume(id: str):
     drive_file_id = document.get("drive_file_id")
     if drive_file_id:
         file_stream = drive_service.download_from_drive(drive_file_id)
+        safe_name = document.get('name', 'Resume').replace(' ', '_')
         return StreamingResponse(
             file_stream, 
             media_type="application/pdf", 
-            headers={"Content-Disposition": f"attachment; filename=\"{document.get('file_name', 'resume')}.pdf\""}
+            headers={"Content-Disposition": f"attachment; filename=\"{safe_name}_Resume.pdf\""}
         )
         
     pdf_path = document.get("pdf_path")
