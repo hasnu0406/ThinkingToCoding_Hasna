@@ -1,15 +1,15 @@
 import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { animate, style, transition, trigger } from '@angular/animations';
-import { ApiService } from '../../core/api.service';
-import { CandidateProfile } from '../../core/models';
+import { BackendApiClientService } from '../../core/backend-api-client.service';
+import { CandidateProfile } from '../../core/data-type-definitions.model';
 
 @Component({
-  selector: 'app-database',
+  selector: 'app-candidate-profile-database',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './database.component.html',
-  styleUrl: './database.component.css',
+  templateUrl: './candidate-profile-database.component.html',
+  styleUrl: './candidate-profile-database.component.css',
   animations: [
     trigger('fadeInOut', [
       transition(':enter', [
@@ -28,8 +28,8 @@ import { CandidateProfile } from '../../core/models';
     ])
   ]
 })
-export class DatabaseComponent {
-  private readonly api = inject(ApiService);
+export class CandidateProfileDatabaseComponent {
+  private readonly api = inject(BackendApiClientService);
 
   @Input() candidates: CandidateProfile[] = [];
   @Input() selectedCandidate: CandidateProfile | null = null;

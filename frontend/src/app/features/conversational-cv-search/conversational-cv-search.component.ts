@@ -1,8 +1,8 @@
 import { Component, ElementRef, ViewChild, AfterViewChecked, Output, EventEmitter, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApiService } from '../../core/api.service';
-import { CandidateProfile } from '../../core/models';
+import { BackendApiClientService } from '../../core/backend-api-client.service';
+import { CandidateProfile } from '../../core/data-type-definitions.model';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -12,13 +12,13 @@ interface ChatMessage {
 }
 
 @Component({
-  selector: 'app-chatbot',
+  selector: 'app-conversational-cv-search',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './chatbot.component.html',
-  styleUrls: ['./chatbot.component.css']
+  templateUrl: './conversational-cv-search.component.html',
+  styleUrls: ['./conversational-cv-search.component.css']
 })
-export class ChatbotComponent implements AfterViewChecked, OnChanges {
+export class ConversationalCvSearchComponent implements AfterViewChecked, OnChanges {
   @ViewChild('messagesContainer') messagesContainer!: ElementRef;
   @Output() candidateSelected = new EventEmitter<CandidateProfile>();
 
@@ -31,7 +31,7 @@ export class ChatbotComponent implements AfterViewChecked, OnChanges {
   isThinking = false;
   private shouldScroll = false;
 
-  constructor(private api: ApiService) {}
+  constructor(private api: BackendApiClientService) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['sessionId']) {

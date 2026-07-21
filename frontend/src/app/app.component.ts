@@ -1,28 +1,28 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { animate, style, transition, trigger } from '@angular/animations';
-import { ApiService } from './core/api.service';
-import { CandidateProfile } from './core/models';
-import { ThreeBgComponent } from './shared/components/three-bg/three-bg.component';
-import { ChatbotComponent } from './features/chatbot/chatbot.component';
-import { AuthComponent } from './features/auth/auth.component';
-import { DashboardComponent } from './features/dashboard/dashboard.component';
-import { UploadComponent } from './features/upload/upload.component';
-import { DatabaseComponent } from './features/database/database.component';
-import { HistoryComponent } from './features/history/history.component';
+import { BackendApiClientService } from './core/backend-api-client.service';
+import { CandidateProfile } from './core/data-type-definitions.model';
+import { InteractiveParticleBackgroundComponent } from './shared/components/interactive-particle-background/interactive-particle-background.component';
+import { ConversationalCvSearchComponent } from './features/conversational-cv-search/conversational-cv-search.component';
+import { UserAccessControlComponent } from './features/user-access-control/user-access-control.component';
+import { RecruitmentAnalyticsDashboardComponent } from './features/recruitment-analytics-dashboard/recruitment-analytics-dashboard.component';
+import { ResumeFileParserComponent } from './features/resume-file-parser/resume-file-parser.component';
+import { CandidateProfileDatabaseComponent } from './features/candidate-profile-database/candidate-profile-database.component';
+import { PastSearchesLogComponent } from './features/past-searches-log/past-searches-log.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [
     CommonModule,
-    ThreeBgComponent,
-    ChatbotComponent,
-    AuthComponent,
-    DashboardComponent,
-    UploadComponent,
-    DatabaseComponent,
-    HistoryComponent
+    InteractiveParticleBackgroundComponent,
+    ConversationalCvSearchComponent,
+    UserAccessControlComponent,
+    RecruitmentAnalyticsDashboardComponent,
+    ResumeFileParserComponent,
+    CandidateProfileDatabaseComponent,
+    PastSearchesLogComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
@@ -39,7 +39,7 @@ import { HistoryComponent } from './features/history/history.component';
   ]
 })
 export class AppComponent {
-  private readonly api = inject(ApiService);
+  private readonly api = inject(BackendApiClientService);
 
   // ── Auth State ────────────────────────────────────────────────────
   currentUser: { name: string; email: string; token: string } | null = null;
