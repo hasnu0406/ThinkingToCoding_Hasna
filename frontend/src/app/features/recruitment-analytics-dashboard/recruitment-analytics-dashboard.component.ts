@@ -1,15 +1,15 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CandidateProfile } from '../../core/models';
+import { CandidateProfile } from '../../core/data-type-definitions.model';
 
 @Component({
-  selector: 'app-dashboard',
+  selector: 'app-recruitment-analytics-dashboard',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.css'
+  templateUrl: './recruitment-analytics-dashboard.component.html',
+  styleUrl: './recruitment-analytics-dashboard.component.css'
 })
-export class DashboardComponent {
+export class RecruitmentAnalyticsDashboardComponent {
   @Input() candidates: CandidateProfile[] = [];
 
   @Output() searchBySkill = new EventEmitter<string>();

@@ -2,19 +2,19 @@ import { Component, EventEmitter, inject, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { catchError, forkJoin, map, of } from 'rxjs';
-import { ApiService } from '../../core/api.service';
-import { CandidateProfile } from '../../core/models';
+import { BackendApiClientService } from '../../core/backend-api-client.service';
+import { CandidateProfile } from '../../core/data-type-definitions.model';
 
 @Component({
-  selector: 'app-upload',
+  selector: 'app-resume-file-parser',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './upload.component.html',
-  styleUrl: './upload.component.css'
+  templateUrl: './resume-file-parser.component.html',
+  styleUrl: './resume-file-parser.component.css'
 })
-export class UploadComponent {
+export class ResumeFileParserComponent {
   private readonly fb = inject(FormBuilder);
-  private readonly api = inject(ApiService);
+  private readonly api = inject(BackendApiClientService);
 
   @Output() uploadComplete = new EventEmitter<{
     uploaded: CandidateProfile[];

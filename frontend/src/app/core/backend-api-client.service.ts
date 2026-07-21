@@ -2,10 +2,10 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { CandidateProfile, SearchResponse, SearchHistory } from './models';
+import { CandidateProfile, SearchResponse, SearchHistory } from './data-type-definitions.model';
 
 @Injectable({ providedIn: 'root' })
-export class ApiService {
+export class BackendApiClientService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = 'http://127.0.0.1:8000';
 

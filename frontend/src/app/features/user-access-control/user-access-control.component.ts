@@ -2,14 +2,14 @@ import { Component, EventEmitter, inject, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { animate, style, transition, trigger } from '@angular/animations';
-import { ApiService } from '../../core/api.service';
+import { BackendApiClientService } from '../../core/backend-api-client.service';
 
 @Component({
-  selector: 'app-auth',
+  selector: 'app-user-access-control',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './auth.component.html',
-  styleUrl: './auth.component.css',
+  templateUrl: './user-access-control.component.html',
+  styleUrl: './user-access-control.component.css',
   animations: [
     trigger('fadeInOut', [
       transition(':enter', [
@@ -22,9 +22,9 @@ import { ApiService } from '../../core/api.service';
     ])
   ]
 })
-export class AuthComponent {
+export class UserAccessControlComponent {
   private readonly fb = inject(FormBuilder);
-  private readonly api = inject(ApiService);
+  private readonly api = inject(BackendApiClientService);
 
   @Output() loginSuccess = new EventEmitter<{ name: string; email: string; token: string }>();
 

@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/co
 import * as THREE from 'three';
 
 @Component({
-  selector: 'app-three-bg',
+  selector: 'app-interactive-particle-background',
   standalone: true,
   template: '<canvas #canvas class="canvas-bg"></canvas>',
   styles: [`
@@ -22,7 +22,7 @@ import * as THREE from 'three';
     }
   `]
 })
-export class ThreeBgComponent implements OnInit, OnDestroy {
+export class InteractiveParticleBackgroundComponent implements OnInit, OnDestroy {
   @ViewChild('canvas') canvasRef!: ElementRef<HTMLCanvasElement>;
 
   private scene!: THREE.Scene;

@@ -3,11 +3,11 @@ import { CommonModule } from '@angular/common';
 import { animate, style, transition, trigger } from '@angular/animations';
 
 @Component({
-  selector: 'app-history',
+  selector: 'app-past-searches-log',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './history.component.html',
-  styleUrl: './history.component.css',
+  templateUrl: './past-searches-log.component.html',
+  styleUrl: './past-searches-log.component.css',
   animations: [
     trigger('slideIn', [
       transition(':enter', [
@@ -17,7 +17,7 @@ import { animate, style, transition, trigger } from '@angular/animations';
     ])
   ]
 })
-export class HistoryComponent {
+export class PastSearchesLogComponent {
   @Input() chatSessions: any[] = [];
   @Input() isLoadingHistory = false;
 

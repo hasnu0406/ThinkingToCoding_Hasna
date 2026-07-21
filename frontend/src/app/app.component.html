@@ -1,9 +1,9 @@
 <div class="premium-container">
   <!-- Animated background -->
-  <app-three-bg></app-three-bg>
+  <app-interactive-particle-background></app-interactive-particle-background>
 
   <!-- Auth Panel (unauthenticated) -->
-  <app-auth *ngIf="!currentUser" (loginSuccess)="onLoginSuccess($event)"></app-auth>
+  <app-user-access-control *ngIf="!currentUser" (loginSuccess)="onLoginSuccess($event)"></app-user-access-control>
 
   <!-- Platform Wrapper: Sidebar + Main Content -->
   <div class="platform-wrapper" *ngIf="currentUser">
@@ -25,7 +25,7 @@
         </li>
         <li class="nav-item" [class.active]="activeView === 'database'" (click)="setView('database')">
           <span class="nav-icon">📂</span>
-          <span class="nav-text">Database Workspace</span>
+          <span class="nav-text">Candidate Directory</span>
         </li>
         <li class="nav-item" [class.active]="activeView === 'upload'" (click)="setView('upload')">
           <span class="nav-icon">📤</span>
@@ -69,24 +69,24 @@
       </div>
 
       <!-- VIEW 1: DASHBOARD -->
-      <app-dashboard
+      <app-recruitment-analytics-dashboard
         *ngIf="activeView === 'dashboard'"
         [@fadeInOut]
         [candidates]="candidates"
         (searchBySkill)="searchBySkill($event)"
         (inspectCandidate)="inspectCandidate($event)"
         (navigateTo)="setView($any($event))">
-      </app-dashboard>
+      </app-recruitment-analytics-dashboard>
 
       <!-- VIEW 2: UPLOAD -->
-      <app-upload
+      <app-resume-file-parser
         *ngIf="activeView === 'upload'"
         [@fadeInOut]
         (uploadComplete)="onUploadComplete($event)">
-      </app-upload>
+      </app-resume-file-parser>
 
-      <!-- VIEW 3: DATABASE WORKSPACE -->
-      <app-database
+      <!-- VIEW 3: CANDIDATE DIRECTORY -->
+      <app-candidate-profile-database
         *ngIf="activeView === 'database'"
         [@fadeInOut]
         [candidates]="candidates"
@@ -98,10 +98,10 @@
         (refreshAll)="loadCandidates()"
         (searchBySkill)="searchBySkill($event)"
         (navigateToUpload)="setView('upload')">
-      </app-database>
+      </app-candidate-profile-database>
 
       <!-- VIEW 4: CHAT HISTORY -->
-      <app-history
+      <app-past-searches-log
         *ngIf="activeView === 'history'"
         [@fadeInOut]
         [chatSessions]="chatSessions"
@@ -111,7 +111,7 @@
         (deleteSession)="deleteChatSession($event)"
         (clearAll)="clearAllChatSessions()"
         (navigateToChatbot)="setView('chatbot')">
-      </app-history>
+      </app-past-searches-log>
 
       <!-- VIEW 5: SEARCHBOT CHAT -->
       <section class="viewport-section" *ngIf="activeView === 'chatbot'" [@fadeInOut]>
@@ -123,18 +123,18 @@
               <p>Chat naturally to find the best candidates. Just describe what you need in plain English!</p>
             </div>
           </div>
-          <app-chatbot
+          <app-conversational-cv-search
             [sessionId]="chatSessionId"
             [userEmail]="currentUser.email"
             (sessionCreated)="chatSessionId = $event"
             (candidateSelected)="inspectCandidate($event)">
-          </app-chatbot>
+          </app-conversational-cv-search>
         </div>
       </section>
 
       <!-- Footer -->
       <footer class="premium-footer">
-        <p>&copy; 2026 Candidate Search Platform. Premium Menu Dashboard Edition.</p>
+        <p>&copy; 2026 Candidate Search Bot. Professional Recruitment System.</p>
       </footer>
     </div>
   </div>
