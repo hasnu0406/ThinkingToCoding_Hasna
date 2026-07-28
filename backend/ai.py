@@ -3,11 +3,12 @@ import threading
 from abc import ABC, abstractmethod
 from typing import Any
 from groq import Groq
-from openai import OpenAI
+from openai import OpenAI, AzureOpenAI
 
 from config import (
     LLM_PROVIDER, GROQ_API_KEYS, OPENROUTER_API_KEY,
     GROQ_MODEL, OPENROUTER_MODEL,
+    AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_DEPLOYMENT_NAME, AZURE_OPENAI_API_VERSION,
     JSON_TEMPERATURE, JSON_MAX_TOKENS,
     TEXT_TEMPERATURE, TEXT_MAX_TOKENS,
 )
@@ -137,6 +138,45 @@ def build_openrouter(openrouter_key: str | None, **kwargs) -> list[LLMProviderWr
         ]
     return []
 
+
+class AzureProvider(LLMProviderWrapper):
+    def ping(self) -> None:
+        self.client.chat.completions.create(
+            model=self.model,
+            temperature=0.1,
+            max_tokens=2,
+            messages=[{"role": "user", "content": "ping"}],
+        )
+
+    def generate(self, messages: list[dict], temperature: float, max_tokens: int) -> str:
+        completion = self.client.chat.completions.create(
+            model=self.model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            messages=messages,
+        )
+        return (completion.choices[0].message.content or "").strip()
+
+    def is_auth_error(self, exc: Exception) -> bool:
+        error_str = str(exc).lower()
+        return "401" in error_str or "api_key" in error_str or "unauthorized" in error_str or "invalid api key" in error_str
+
+
+@ProviderRegistry.register("azure")
+def build_azure(**kwargs) -> list[LLMProviderWrapper]:
+    if AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT:
+        return [
+            AzureProvider(
+                provider_name="azure",
+                client=AzureOpenAI(
+                    api_key=AZURE_OPENAI_API_KEY,
+                    azure_endpoint=AZURE_OPENAI_ENDPOINT,
+                    api_version=AZURE_OPENAI_API_VERSION
+                ),
+                model=AZURE_OPENAI_DEPLOYMENT_NAME
+            )
+        ]
+    return []
 
 # ─────────────────────────────────────────────
 # Multi-Provider AI Manager

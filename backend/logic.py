@@ -48,6 +48,16 @@ def rank_candidates(candidates: list[dict[str, Any]], filters: dict[str, Any]) -
     for candidate in candidates:
         score = 0
         
+        # Name matching (Hard Filter)
+        candidate_name = filters.get("candidate_name")
+        if candidate_name:
+            if candidate_name.lower() not in candidate.get("name", "").lower():
+                candidate["rank_score"] = 0
+                ranked.append(candidate)
+                continue
+            else:
+                score += 100  # Massive boost for matching name
+        
         # Skill matching (highest priority)
         candidate_skills = set(s.lower().strip() for s in candidate.get("skills", []))
         filter_skills = set(filters.get("skills", []))
@@ -75,8 +85,8 @@ def rank_candidates(candidates: list[dict[str, Any]], filters: dict[str, Any]) -
         
         # Experience matching
         candidate_exp = extract_experience_years(candidate.get("experience", "0"))
-        min_exp = filters.get("min_experience")
-        max_exp = filters.get("max_experience")
+        min_exp = filters.get("min_experience_years")
+        max_exp = filters.get("max_experience_years")
         
         if min_exp is not None:
             if candidate_exp >= min_exp:
@@ -84,7 +94,11 @@ def rank_candidates(candidates: list[dict[str, Any]], filters: dict[str, Any]) -
                 # Extra bonus for exceeding minimum
                 score += min((candidate_exp - min_exp) // 2, 2)
             else:
-                score -= 2  # Penalize for insufficient experience
+                # Hard penalty for not meeting minimum experience
+                score = 0
+                candidate["rank_score"] = score
+                ranked.append(candidate)
+                continue
         
         if max_exp is not None and candidate_exp > max_exp:
             score -= 1  # Small penalty for over-qualified
@@ -100,7 +114,7 @@ def rank_candidates(candidates: list[dict[str, Any]], filters: dict[str, Any]) -
         ranked.append(candidate)
     
     sorted_ranked = sorted(ranked, key=lambda x: x["rank_score"], reverse=True)
-    has_active_filters = bool(filters.get("skills") or filters.get("role_keyword") or filters.get("min_experience") or filters.get("max_experience"))
+    has_active_filters = bool(filters.get("skills") or filters.get("role_keyword") or filters.get("min_experience_years") or filters.get("max_experience_years"))
     
     if has_active_filters:
         sorted_ranked = [c for c in sorted_ranked if c["rank_score"] > 0]
