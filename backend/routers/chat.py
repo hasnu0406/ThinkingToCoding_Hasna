@@ -157,11 +157,12 @@ def chat(data: ChatMessageSendRequest, background_tasks: BackgroundTasks) -> dic
     
     # 3. Retrieve and rank candidates
     all_candidates = [_serialize(d) for d in resume_collection.find({})]
-    has_active_filters = bool(filters.get("skills") or filters.get("role_keyword") or filters.get("min_experience_years") or filters.get("max_experience_years") or filters.get("candidate_name"))
+    has_active_filters = bool(filters.get("skills") or filters.get("role_keyword") or filters.get("min_experience_years") or filters.get("max_experience_years") or filters.get("candidate_name") or filters.get("list_all_candidates"))
     
     if has_active_filters:
         ranked_results = rank_candidates(all_candidates, filters)
-        top_results = ranked_results[:3]
+        limit = 6 if filters.get("list_all_candidates") else 3
+        top_results = ranked_results[:limit]
     else:
         top_results = []
         

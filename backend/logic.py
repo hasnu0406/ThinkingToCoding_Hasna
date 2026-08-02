@@ -47,6 +47,8 @@ def rank_candidates(candidates: list[dict[str, Any]], filters: dict[str, Any]) -
     
     for candidate in candidates:
         score = 0
+        if filters.get("list_all_candidates"):
+            score += 1
         
         # Name matching (Hard Filter)
         candidate_name = filters.get("candidate_name")
@@ -114,7 +116,7 @@ def rank_candidates(candidates: list[dict[str, Any]], filters: dict[str, Any]) -
         ranked.append(candidate)
     
     sorted_ranked = sorted(ranked, key=lambda x: x["rank_score"], reverse=True)
-    has_active_filters = bool(filters.get("skills") or filters.get("role_keyword") or filters.get("min_experience_years") or filters.get("max_experience_years"))
+    has_active_filters = bool(filters.get("skills") or filters.get("role_keyword") or filters.get("min_experience_years") or filters.get("max_experience_years") or filters.get("candidate_name") or filters.get("list_all_candidates"))
     
     if has_active_filters:
         sorted_ranked = [c for c in sorted_ranked if c["rank_score"] > 0]

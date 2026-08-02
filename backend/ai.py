@@ -410,6 +410,8 @@ Return ONLY the JSON matching the schema."""
             "min_experience": min_exp,
             "max_experience": max_exp,
             "role_keyword": response.get("role_keyword"),
+            "candidate_name": response.get("candidate_name"),
+            "list_all_candidates": response.get("list_all_candidates", False),
             "requests_resumes": requests_resumes
         }
     return fallback
@@ -448,6 +450,8 @@ def ai_chatbot_reply(conversation: list[dict], ranked_candidates: list[dict], fi
     experience = filters.get("experience")
 
     # Build a structured summary of ranked candidates for the AI
+    has_filters = bool(role_keyword or skills or experience or filters.get("list_all_candidates") or filters.get("candidate_name"))
+    
     if ranked_candidates:
         candidates_text = []
         for i, c in enumerate(ranked_candidates, 1):
@@ -458,8 +462,10 @@ def ai_chatbot_reply(conversation: list[dict], ranked_candidates: list[dict], fi
                 f"Skills: {', '.join(c.get('skills', [])[:6])}"
             )
         ranked_text = "\\n".join(candidates_text)
-    else:
+    elif has_filters:
         ranked_text = "No candidates matched."
+    else:
+        ranked_text = "No search was requested yet."
 
     system_prompt = f"""You are CV Finder, a friendly, intelligent, and professional recruitment assistant for the Candidate Search Platform.
 
@@ -482,8 +488,9 @@ Your Responsibilities:
 - You MUST list and describe EVERY SINGLE candidate provided in the Available Search Results. Do not omit any candidate.
 - Include each candidate's: Name, Current role, Experience, Skills, and Match score.
 - After summarizing the candidates, you MUST explicitly ask the user: "Would you like to view and download their resumes?"
-- If no candidates match, clearly state that no exact matches were found and suggest nearby or related profiles if available.
-- Never invent, infer, or fabricate candidate profiles or search results. Only use the information provided in the Available Search Results.
+- If no candidates match, clearly state that you couldn't find any matches. Ask the user to provide different technical skills or job titles.
+- If "Available Search Results" says "No search was requested yet.", simply greet the user, mention there are {total_in_db} candidates in the database, and warmly ask what kind of role or skills they are looking for. Do not say "I don't have any matching candidates" or sound like you are making an excuse. Just be helpful.
+- CRITICAL: Never invent, infer, hallucinate, or fabricate candidate names, profiles, or search results. If you don't see a candidate in the Available Search Results, do not output any names. You cannot read the full database directly.
 
 2. Follow-up Questions
 - Maintain context throughout the current conversation.

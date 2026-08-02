@@ -48,6 +48,7 @@ Return ONLY valid JSON with this exact schema:
   "max_experience_years": number or null,
   "role_keyword": "string" or null,
   "candidate_name": "string" or null,
+  "list_all_candidates": boolean,
   "requests_resumes": boolean
 }
 
@@ -57,13 +58,15 @@ Rules:
 - max_experience_years: Set to null unless explicitly stated (e.g., "2-5 years" -> max is 5)
 - role_keyword: Extract the main job title or role (e.g., "python developer", "frontend engineer", "data scientist"). It must represent a full job title/role (e.g., use "frontend developer" instead of just "frontend"). Set to null if none is found.
 - candidate_name: Extract the name of a specific candidate if the user asks for them by name (e.g., "Aparna K S"). Set to null if not mentioned.
+- list_all_candidates: Set to true ONLY if the user explicitly asks to see who is in the database, asks to list all candidates, or asks for the available candidates without specifying any technical filters (e.g., "show me the candidates in the directory", "who do you have?").
 - requests_resumes: Set to true ONLY if the user explicitly asks to download or view the actual RESUMES, CVs, or PDFs (e.g. "show me their resumes", "download their CVs", "yes I want to see the resumes"). If they just ask to find or show "candidates", "developers", or "people", set this to false.
 
 Examples:
-- "Python developer with 2 years experience" -> {"skills": ["python"], "min_experience_years": 2, "max_experience_years": null, "role_keyword": "python developer", "candidate_name": null, "requests_resumes": false}
-- "Show me some java candidates" -> {"skills": ["java"], "min_experience_years": null, "max_experience_years": null, "role_keyword": "java developer", "candidate_name": null, "requests_resumes": false}
-- "Show me Aparna K S resume" -> {"skills": [], "min_experience_years": null, "max_experience_years": null, "role_keyword": null, "candidate_name": "Aparna K S", "requests_resumes": true}
-- "Show me their resumes" -> {"skills": [], "min_experience_years": null, "max_experience_years": null, "role_keyword": null, "candidate_name": null, "requests_resumes": true}
+- "Python developer with 2 years experience" -> {"skills": ["python"], "min_experience_years": 2, "max_experience_years": null, "role_keyword": "python developer", "candidate_name": null, "list_all_candidates": false, "requests_resumes": false}
+- "Show me some java candidates" -> {"skills": ["java"], "min_experience_years": null, "max_experience_years": null, "role_keyword": "java developer", "candidate_name": null, "list_all_candidates": false, "requests_resumes": false}
+- "Show me Aparna K S resume" -> {"skills": [], "min_experience_years": null, "max_experience_years": null, "role_keyword": null, "candidate_name": "Aparna K S", "list_all_candidates": false, "requests_resumes": true}
+- "Show me their resumes" -> {"skills": [], "min_experience_years": null, "max_experience_years": null, "role_keyword": null, "candidate_name": null, "list_all_candidates": false, "requests_resumes": true}
+- "Who are the candidates in the database?" -> {"skills": [], "min_experience_years": null, "max_experience_years": null, "role_keyword": null, "candidate_name": null, "list_all_candidates": true, "requests_resumes": false}
 """
 
 EXTRACTION_PROMPT = """You are an expert resume parser.
