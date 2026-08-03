@@ -390,7 +390,7 @@ def ai_parse_query(query: str, history: list[dict] = None) -> dict[str, Any]:
     prompt = f"""{QUERY_PARSING_PROMPT}
 
 Conversation Context Rules:
-- If the user query is a conversational follow-up/continuation (e.g. 'retry', 'yes', 'show more', 'any others', 'refresh', 'none of these') or refers to candidates/filters from the history without specifying new ones, you MUST retain the filters (skills, experience, role_keyword) from the previous turns.
+- If the user query is a conversational follow-up/continuation (e.g. 'retry', 'yes', 'show more', 'any others', 'refresh', 'none of these', 'provide me their resumes') or refers to candidates/filters from the history without specifying new ones, you MUST retain the filters (skills, experience, role_keyword, list_all_candidates) from the previous turns.
 - If the user query modifies the previous search criteria (e.g. 'with 5 years experience', 'only python developers', 'actually react developer'), update or add those specific filters while keeping the rest of the context from previous turns.
 
 {context_str}User query to parse: "{query}"
@@ -488,6 +488,7 @@ Your Responsibilities:
 - You MUST list and describe EVERY SINGLE candidate provided in the Available Search Results. Do not omit any candidate.
 - Include each candidate's: Name, Current role, Experience, Skills, and Match score.
 - After summarizing the candidates, you MUST explicitly ask the user: "Would you like to view and download their resumes?"
+- If the user explicitly asks to view, provide, or download resumes (e.g. "provide me their resumes"), you must excitedly confirm and tell them that the interactive resume cards have been provided in the chat interface below. Do NOT say you don't have the ability to provide resumes.
 - If no candidates match, clearly state that you couldn't find any matches. Ask the user to provide different technical skills or job titles.
 - If "Available Search Results" says "No search was requested yet.", simply greet the user, mention there are {total_in_db} candidates in the database, and warmly ask what kind of role or skills they are looking for. Do not say "I don't have any matching candidates" or sound like you are making an excuse. Just be helpful.
 - CRITICAL: Never invent, infer, hallucinate, or fabricate candidate names, profiles, or search results. If you don't see a candidate in the Available Search Results, do not output any names. You cannot read the full database directly.
