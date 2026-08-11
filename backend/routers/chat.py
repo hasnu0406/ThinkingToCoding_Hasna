@@ -94,6 +94,19 @@ def get_chat_session(session_id: str) -> dict[str, Any]:
     if "updated_at" in session and isinstance(session["updated_at"], datetime.datetime):
         session["updated_at"] = session["updated_at"].isoformat()
         
+    # Rehydrate candidate IDs into full candidate objects for the UI
+    if "messages" in session:
+        for msg in session["messages"]:
+            if msg.get("role") == "assistant" and "candidates" in msg:
+                candidates_list = msg["candidates"]
+                # Check if we stored IDs (strings) instead of full objects
+                if candidates_list and isinstance(candidates_list[0], str):
+                    object_ids = [_get_object_id(cid) for cid in candidates_list]
+                    full_candidates = list(resume_collection.find({"_id": {"$in": object_ids}}))
+                    # Convert to dictionary mapping for ordering and formatting
+                    cand_dict = {str(c["_id"]): _serialize(c) for c in full_candidates}
+                    msg["candidates"] = [cand_dict[cid] for cid in candidates_list if cid in cand_dict]
+                    
     return session
 
 
@@ -186,10 +199,13 @@ def chat(data: ChatMessageSendRequest, background_tasks: BackgroundTasks) -> dic
         "timestamp": datetime.datetime.utcnow().isoformat()
     }
     
+    # Store only candidate IDs to avoid data duplication in MongoDB
+    candidate_ids = [c["id"] for c in ui_candidates] if ui_candidates else []
+    
     assistant_message_doc = {
         "role": "assistant",
         "content": reply,
-        "candidates": ui_candidates,
+        "candidates": candidate_ids,
         "timestamp": datetime.datetime.utcnow().isoformat()
     }
     

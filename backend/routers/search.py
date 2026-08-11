@@ -13,17 +13,19 @@ from utils import _serialize
 
 def save_search_history_bg(query: str, filters: dict, total_results: int, candidates: list):
     title = ai_generate_query_title(query)
+    candidate_ids = [c["id"] for c in candidates if "id" in c]
     search_history_collection.insert_one({
         "query": query,
         "title": title,
         "filters_used": filters,
         "total_results": total_results,
-        "candidates": candidates,
+        "candidates": candidate_ids,
         "searched_at": datetime.datetime.utcnow(),
     })
 
 def save_bot_search_history_bg(query: str, filters: dict, total_results: int, returned_results: int, candidates: list):
     title = ai_generate_query_title(query)
+    candidate_ids = [c["id"] for c in candidates if "id" in c]
     search_history_collection.insert_one({
         "query": query,
         "title": title,
@@ -31,7 +33,7 @@ def save_bot_search_history_bg(query: str, filters: dict, total_results: int, re
         "filters_used": filters,
         "total_results": total_results,
         "returned_results": returned_results,
-        "candidates": candidates,
+        "candidates": candidate_ids,
         "searched_at": datetime.datetime.utcnow(),
     })
 
@@ -109,7 +111,17 @@ def get_search_history(limit: int = Query(default=20, le=100)) -> list[dict[str,
     normalized: list[dict[str, Any]] = []
 
     for entry in raw_entries:
-        if "candidates" not in entry and "results" in entry:
+        if "candidates" in entry and entry["candidates"] and isinstance(entry["candidates"][0], str):
+            ids = entry["candidates"]
+            object_ids = []
+            for idx in ids:
+                try:
+                    object_ids.append(ObjectId(idx))
+                except Exception:
+                    pass
+            found = {str(p["_id"]): _serialize(p) for p in resume_collection.find({"_id": {"$in": object_ids}})}
+            entry["candidates"] = [found[cid] for cid in ids if cid in found]
+        elif "candidates" not in entry and "results" in entry:
             results_list = entry.get("results", []) or []
             ids = [r.get("id") for r in results_list if r.get("id")]
             profiles = []
