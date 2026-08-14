@@ -5,7 +5,10 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload, MediaIoBaseDownload
+from googleapiclient.errors import HttpError
+from google.auth.exceptions import RefreshError
 from fastapi import HTTPException
+from utils import logger
 from config import GOOGLE_DRIVE_FOLDER_ID
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
@@ -40,6 +43,8 @@ def get_drive_service():
     try:
         service = build('drive', 'v3', credentials=creds)
         return service
+    except RefreshError as e:
+        raise HTTPException(status_code=401, detail="Google Drive authentication expired. Please re-authenticate.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to authenticate with Google Drive: {str(e)}")
 
@@ -59,8 +64,10 @@ def upload_to_drive(file_bytes: bytes, filename: str, mime_type: str = 'applicat
     try:
         file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
         return file.get('id')
+    except HttpError as e:
+        raise HTTPException(status_code=502, detail=f"Google Drive API error during upload: {e.reason}")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to upload file to Google Drive: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Unexpected error during upload: {str(e)}")
 
 def download_from_drive(file_id: str) -> io.BytesIO:
     """Downloads a file from Google Drive and returns it as a BytesIO stream."""
@@ -74,13 +81,19 @@ def download_from_drive(file_id: str) -> io.BytesIO:
             status, done = downloader.next_chunk()
         file_stream.seek(0)
         return file_stream
+    except HttpError as e:
+        if e.resp.status == 404:
+            raise HTTPException(status_code=404, detail="File not found in Google Drive.")
+        raise HTTPException(status_code=502, detail=f"Google Drive API error during download: {e.reason}")
     except Exception as e:
-        raise HTTPException(status_code=404, detail=f"Failed to download file from Google Drive: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Unexpected error during download: {str(e)}")
 
 def delete_from_drive(file_id: str):
     """Deletes a file from Google Drive."""
     service = get_drive_service()
     try:
         service.files().delete(fileId=file_id).execute()
+    except HttpError as e:
+        logger.warning(f"Warning: Google Drive API error deleting file {file_id}: {e.reason}")
     except Exception as e:
-        print(f"Warning: Failed to delete file {file_id} from Google Drive: {str(e)}")
+        logger.warning(f"Warning: Unexpected error deleting file {file_id}: {str(e)}")

@@ -1,8 +1,10 @@
 import datetime
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from utils import logger
 
 # Import AI/groq status to expose in health check
 from ai import llm_available
@@ -45,6 +47,12 @@ app.include_router(resume.router)
 app.include_router(resume.resumes_router)
 app.include_router(export.router)
 app.include_router(chat.router)
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled error: {exc}", exc_info=True)
+    return JSONResponse(status_code=500, content={"detail": "An unexpected error occurred."})
 
 
 # ─── System Routes ───────────────────────────────────────────────────────────

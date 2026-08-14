@@ -2,6 +2,7 @@ import json
 import threading
 from abc import ABC, abstractmethod
 from typing import Any
+from fastapi import HTTPException
 from groq import Groq
 from openai import OpenAI, AzureOpenAI
 
@@ -17,7 +18,7 @@ from constants import (
     JOB_RECOMMENDATION_PROMPT,
     QUERY_PARSING_PROMPT
 )
-from utils import _clean_json_payload, _safe_profile
+from utils import _clean_json_payload, _safe_profile, logger
 from logic import parse_query
 
 
@@ -109,7 +110,7 @@ class ProviderRegistry:
     def create_clients(cls, provider_name: str, **kwargs) -> list[LLMProviderWrapper]:
         builder = cls._builders.get(provider_name)
         if not builder:
-            print(f"[KeyManager] Unknown provider '{provider_name}'.")
+            logger.warning(f"[KeyManager] Unknown provider '{provider_name}'.")
             return []
         return builder(**kwargs)
 
@@ -208,7 +209,7 @@ class AIClientManager:
                 valid_clients.append(client_wrapper)
             except Exception as exc:
                 if client_wrapper.is_auth_error(exc):
-                    print(f"[KeyManager Startup] Disabled invalid {client_wrapper.provider} key on initialization.")
+                    logger.warning(f"[KeyManager Startup] Disabled invalid {client_wrapper.provider} key on initialization.")
                 else:
                     valid_clients.append(client_wrapper)
                 
@@ -241,7 +242,7 @@ class AIClientManager:
             if len(self._clients) > 0:
                 idx = self._index % len(self._clients)
                 removed = self._clients.pop(idx)
-                print(f"[KeyManager] Disabled invalid provider/key: {removed.provider}")
+                logger.warning(f"[KeyManager] Disabled invalid provider/key: {removed.provider}")
                 if len(self._clients) > 0:
                     self._index = self._index % len(self._clients)
                 else:
@@ -267,24 +268,27 @@ class AIClientManager:
                     max_tokens=JSON_MAX_TOKENS
                 )
                 if not raw_content:
-                    print(f"[KeyManager] {client_wrapper.provider} returned empty content. Rotating.")
+                    logger.warning(f"[KeyManager] {client_wrapper.provider} returned empty content. Rotating.")
                     self._rotate()
                     continue
                 return json.loads(_clean_json_payload(raw_content))
+            except json.JSONDecodeError as exc:
+                logger.error(f"[KeyManager] {client_wrapper.provider} returned invalid JSON: {exc}.")
+                raise HTTPException(status_code=502, detail="AI parsing failed because the model returned invalid data. Please retry.")
             except Exception as exc:
                 error_str = str(exc).lower()
                 
                 if client_wrapper.is_auth_error(exc):
-                    print(f"[KeyManager] {client_wrapper.provider} authentication failed (401). Disabling key.")
+                    logger.warning(f"[KeyManager] {client_wrapper.provider} authentication failed (401). Disabling key.")
                     self._disable_current_client()
                 elif "rate" in error_str or "429" in error_str or "quota" in error_str:
-                    print(f"[KeyManager] {client_wrapper.provider} rate-limited. Rotating.")
+                    logger.warning(f"[KeyManager] {client_wrapper.provider} rate-limited. Rotating.")
                     self._rotate()
                 else:
-                    print(f"[KeyManager] {client_wrapper.provider} JSON request failed: {exc}. Rotating.")
+                    logger.warning(f"[KeyManager] {client_wrapper.provider} JSON request failed: {exc}. Rotating.")
                     self._rotate()
 
-        print("[KeyManager] All providers exhausted. Returning fallback.")
+        logger.warning("[KeyManager] All providers exhausted. Returning fallback.")
         return fallback
 
     def call_text(self, messages: list[dict]) -> str:
@@ -307,7 +311,7 @@ class AIClientManager:
                     max_tokens=TEXT_MAX_TOKENS
                 )
                 if not raw_content:
-                    print(f"[KeyManager] {client_wrapper.provider} returned empty text content. Rotating.")
+                    logger.warning(f"[KeyManager] {client_wrapper.provider} returned empty text content. Rotating.")
                     self._rotate()
                     continue
                 return raw_content
@@ -315,13 +319,13 @@ class AIClientManager:
                 error_str = str(exc).lower()
                 
                 if client_wrapper.is_auth_error(exc):
-                    print(f"[KeyManager] {client_wrapper.provider} authentication failed (401). Disabling key.")
+                    logger.warning(f"[KeyManager] {client_wrapper.provider} authentication failed (401). Disabling key.")
                     self._disable_current_client()
                 elif "rate" in error_str or "429" in error_str or "quota" in error_str:
-                    print(f"[KeyManager] {client_wrapper.provider} rate-limited. Rotating.")
+                    logger.warning(f"[KeyManager] {client_wrapper.provider} rate-limited. Rotating.")
                     self._rotate()
                 else:
-                    print(f"[KeyManager] {client_wrapper.provider} text call failed: {exc}. Rotating.")
+                    logger.warning(f"[KeyManager] {client_wrapper.provider} text call failed: {exc}. Rotating.")
                     self._rotate()
 
         return ""
@@ -334,7 +338,7 @@ key_manager = AIClientManager(LLM_PROVIDER, GROQ_API_KEYS, OPENROUTER_API_KEY)
 llm_available = key_manager.available
 
 if not llm_available:
-    print("WARNING: No API Keys set. AI endpoints will use fallback content.")
+    logger.warning("WARNING: No API Keys set. AI endpoints will use fallback content.")
 
 
 # ─────────────────────────────────────────────

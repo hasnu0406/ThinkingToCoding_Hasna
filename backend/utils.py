@@ -1,9 +1,17 @@
+import logging
 import re
 from typing import Any
 from bson import ObjectId
 from fastapi import HTTPException
 
 from constants import DEFAULT_PROFILE
+
+# ── Structured Logging Configuration ──
+logging.basicConfig(
+    level=logging.INFO, 
+    format="%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
+)
+logger = logging.getLogger("thinking_to_coding")
 
 def _clean_json_payload(raw_text: str) -> str:
     cleaned = raw_text.strip()

@@ -21,7 +21,7 @@ def update_title_bg(session_id: str, message: str) -> None:
             {"$set": {"title": title}}
         )
     except Exception as e:
-        print(f"[ChatRouter] Failed to update session title in background: {e}")
+        logger.error(f"[ChatRouter] Failed to update session title in background: {e}")
 
 
 @router.post("/session")
@@ -166,7 +166,11 @@ def chat(data: ChatMessageSendRequest, background_tasks: BackgroundTasks) -> dic
         })
         
     # Extract Technical filters from the user query (with history context)
-    filters = ai_parse_query(data.message, messages_history)
+    try:
+        filters = ai_parse_query(data.message, messages_history)
+    except Exception as e:
+        logger.warning(f"[ChatRouter] Failed to parse filters from query, defaulting to empty filters. Error: {e}")
+        filters = {}
     
     # 3. Retrieve and rank candidates
     all_candidates = [_serialize(d) for d in resume_collection.find({})]
