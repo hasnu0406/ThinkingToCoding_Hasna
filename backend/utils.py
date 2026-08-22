@@ -15,8 +15,30 @@ logger = logging.getLogger("thinking_to_coding")
 
 def _clean_json_payload(raw_text: str) -> str:
     cleaned = raw_text.strip()
-    cleaned = re.sub(r"^```[a-zA-Z0-9_-]*\n?", "", cleaned)
-    cleaned = re.sub(r"\n?```$", "", cleaned)
+    # Remove <think> blocks from reasoning models if present
+    cleaned = re.sub(r"<think>.*?</think>", "", cleaned, flags=re.DOTALL).strip()
+    
+    # Extract from markdown block if present anywhere in the text
+    json_match = re.search(r"```(?:json)?(.*?)```", cleaned, flags=re.DOTALL)
+    if json_match:
+        cleaned = json_match.group(1).strip()
+    else:
+        # Fallback: extract substring from first { or [ to last } or ]
+        start_idx = cleaned.find("{")
+        start_arr = cleaned.find("[")
+        if start_idx != -1 and start_arr != -1:
+            start = min(start_idx, start_arr)
+        elif start_idx != -1:
+            start = start_idx
+        else:
+            start = start_arr
+            
+        if start != -1:
+            end_char = "]" if cleaned[start] == "[" else "}"
+            end = cleaned.rfind(end_char)
+            if end != -1 and end >= start:
+                cleaned = cleaned[start:end+1]
+                
     cleaned = cleaned.strip()
     # Remove trailing commas inside arrays and objects to prevent JSON decode errors
     cleaned = re.sub(r",\s*\]", "]", cleaned)

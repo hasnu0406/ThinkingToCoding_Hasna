@@ -23,7 +23,7 @@ def parse_query(query: str) -> dict[str, Any]:
     match = re.search(r"(\d+)\s*year", lowered)
     if match:
         experience = int(match.group(1))
-    return {"skills": found_skills, "experience": experience}
+    return {"skills": found_skills, "min_experience_years": experience}
 
 
 def extract_experience_years(experience_value: str) -> int:

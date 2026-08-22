@@ -21,10 +21,18 @@ else:
     GROQ_API_KEYS = []
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY")
+CEREBRAS_API_BASE_URL = os.getenv("CEREBRAS_API_BASE_URL", "https://api.cerebras.ai/v1")
+
+NVIDIA_API_KEY = os.getenv("NVIDIA_API_KEY")
+NVIDIA_API_BASE_URL = os.getenv("NVIDIA_API_BASE_URL", "https://integrate.api.nvidia.com/v1")
 
 # ── LLM Model Configuration ──
 GROQ_MODEL       = os.getenv("GROQ_MODEL",       "llama-3.3-70b-versatile")
 OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL",  "meta-llama/llama-3.3-70b-instruct")
+CEREBRAS_MODEL   = os.getenv("CEREBRAS_MODEL",    "gpt-oss-120b")
+NVIDIA_MODEL     = os.getenv("NVIDIA_MODEL",      "nvidia/llama-3.1-nemotron-70b-instruct")
+NVIDIA_FALLBACK_MODEL = os.getenv("NVIDIA_FALLBACK_MODEL", "meta/llama-3.1-8b-instruct")
 
 # ── Azure OpenAI Configuration ──
 AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")

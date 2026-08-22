@@ -53,7 +53,7 @@ Return ONLY valid JSON with this exact schema:
 }
 
 Rules:
-- skills: Extract technical skills mentioned (lowercase, deduplicated). Check against: python, fastapi, django, flask, angular, react, vue, mongodb, sql, postgresql, mysql, docker, aws, azure, kubernetes, java, node, typescript, javascript, golang, rust, c++, machine learning, deep learning, tensorflow, pytorch
+- skills: Extract any technical skills mentioned in the user query (lowercase, deduplicated, e.g., programming languages, frameworks, styling libraries, databases, devops/cloud tools). Do not restrict extraction to a specific whitelist; extract any technical skill the user explicitly asks for.
 - min_experience_years: Extract minimum experience requirement (e.g., "2 years" -> 2)
 - max_experience_years: Set to null unless explicitly stated (e.g., "2-5 years" -> max is 5)
 - role_keyword: Extract the main job title or role (e.g., "python developer", "frontend engineer", "data scientist"). It must represent a full job title/role (e.g., use "frontend developer" instead of just "frontend"). Set to null if none is found.

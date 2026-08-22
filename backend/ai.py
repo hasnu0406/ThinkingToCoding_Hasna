@@ -12,6 +12,8 @@ from config import (
     AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_DEPLOYMENT_NAME, AZURE_OPENAI_API_VERSION,
     JSON_TEMPERATURE, JSON_MAX_TOKENS,
     TEXT_TEMPERATURE, TEXT_MAX_TOKENS,
+    CEREBRAS_API_KEY, CEREBRAS_API_BASE_URL, CEREBRAS_MODEL,
+    NVIDIA_API_KEY, NVIDIA_API_BASE_URL, NVIDIA_MODEL, NVIDIA_FALLBACK_MODEL,
 )
 from constants import (
     EXTRACTION_PROMPT,
@@ -37,14 +39,17 @@ class LLMProviderWrapper(ABC):
         pass
 
     @abstractmethod
-    def generate(self, messages: list[dict], temperature: float, max_tokens: int) -> str:
+    def generate(self, messages: list[dict], temperature: float, max_tokens: int, response_format: dict | None = None) -> str:
         """Generate a completion string from the provider."""
         pass
 
-    @abstractmethod
     def is_auth_error(self, exc: Exception) -> bool:
-        """Check if an exception is an authentication error."""
-        pass
+        """Check if an exception is an authentication, billing, or model error."""
+        error_str = str(exc).lower()
+        return any(term in error_str for term in [
+            "401", "402", "404", "api_key", "unauthorized", "invalid api key", 
+            "payment", "quota", "billing", "model_not_found", "does not exist"
+        ])
 
 
 class GroqProvider(LLMProviderWrapper):
@@ -56,18 +61,18 @@ class GroqProvider(LLMProviderWrapper):
             messages=[{"role": "user", "content": "ping"}],
         )
 
-    def generate(self, messages: list[dict], temperature: float, max_tokens: int) -> str:
-        completion = self.client.chat.completions.create(
-            model=self.model,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            messages=messages,
-        )
+    def generate(self, messages: list[dict], temperature: float, max_tokens: int, response_format: dict | None = None) -> str:
+        kwargs = {
+            "model": self.model,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "messages": messages,
+        }
+        if response_format:
+            kwargs["response_format"] = response_format
+        completion = self.client.chat.completions.create(**kwargs)
         return (completion.choices[0].message.content or "").strip()
 
-    def is_auth_error(self, exc: Exception) -> bool:
-        error_str = str(exc).lower()
-        return "401" in error_str or "api_key" in error_str or "unauthorized" in error_str or "invalid api key" in error_str
 
 
 class OpenRouterProvider(LLMProviderWrapper):
@@ -79,18 +84,18 @@ class OpenRouterProvider(LLMProviderWrapper):
             messages=[{"role": "user", "content": "ping"}],
         )
 
-    def generate(self, messages: list[dict], temperature: float, max_tokens: int) -> str:
-        completion = self.client.chat.completions.create(
-            model=self.model,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            messages=messages,
-        )
+    def generate(self, messages: list[dict], temperature: float, max_tokens: int, response_format: dict | None = None) -> str:
+        kwargs = {
+            "model": self.model,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "messages": messages,
+        }
+        if response_format:
+            kwargs["response_format"] = response_format
+        completion = self.client.chat.completions.create(**kwargs)
         return (completion.choices[0].message.content or "").strip()
 
-    def is_auth_error(self, exc: Exception) -> bool:
-        error_str = str(exc).lower()
-        return "401" in error_str or "api_key" in error_str or "unauthorized" in error_str or "invalid api key" in error_str
 
 
 # ─────────────────────────────────────────────
@@ -149,18 +154,18 @@ class AzureProvider(LLMProviderWrapper):
             messages=[{"role": "user", "content": "ping"}],
         )
 
-    def generate(self, messages: list[dict], temperature: float, max_tokens: int) -> str:
-        completion = self.client.chat.completions.create(
-            model=self.model,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            messages=messages,
-        )
+    def generate(self, messages: list[dict], temperature: float, max_tokens: int, response_format: dict | None = None) -> str:
+        kwargs = {
+            "model": self.model,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "messages": messages,
+        }
+        if response_format:
+            kwargs["response_format"] = response_format
+        completion = self.client.chat.completions.create(**kwargs)
         return (completion.choices[0].message.content or "").strip()
 
-    def is_auth_error(self, exc: Exception) -> bool:
-        error_str = str(exc).lower()
-        return "401" in error_str or "api_key" in error_str or "unauthorized" in error_str or "invalid api key" in error_str
 
 
 @ProviderRegistry.register("azure")
@@ -179,6 +184,84 @@ def build_azure(**kwargs) -> list[LLMProviderWrapper]:
         ]
     return []
 
+
+class CerebrasProvider(LLMProviderWrapper):
+    def ping(self) -> None:
+        self.client.chat.completions.create(
+            model=self.model,
+            temperature=0.1,
+            max_tokens=2,
+            messages=[{"role": "user", "content": "ping"}],
+        )
+
+    def generate(self, messages: list[dict], temperature: float, max_tokens: int, response_format: dict | None = None) -> str:
+        kwargs = {
+            "model": self.model,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "messages": messages,
+        }
+        if response_format:
+            kwargs["response_format"] = response_format
+        completion = self.client.chat.completions.create(**kwargs)
+        return (completion.choices[0].message.content or "").strip()
+
+
+
+@ProviderRegistry.register("cerebras")
+def build_cerebras(cerebras_key: str | None, **kwargs) -> list[LLMProviderWrapper]:
+    if cerebras_key:
+        return [
+            CerebrasProvider(
+                provider_name="cerebras",
+                client=OpenAI(base_url=CEREBRAS_API_BASE_URL, api_key=cerebras_key),
+                model=CEREBRAS_MODEL
+            )
+        ]
+    return []
+
+
+class NemotronProvider(LLMProviderWrapper):
+    def ping(self) -> None:
+        self.client.chat.completions.create(
+            model=self.model,
+            temperature=0.1,
+            max_tokens=2,
+            messages=[{"role": "user", "content": "ping"}],
+        )
+
+    def generate(self, messages: list[dict], temperature: float, max_tokens: int, response_format: dict | None = None) -> str:
+        kwargs = {
+            "model": self.model,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+            "messages": messages,
+        }
+        if response_format:
+            kwargs["response_format"] = response_format
+        completion = self.client.chat.completions.create(**kwargs)
+        return (completion.choices[0].message.content or "").strip()
+
+
+@ProviderRegistry.register("nemotron")
+def build_nemotron(nvidia_key: str | None, **kwargs) -> list[LLMProviderWrapper]:
+    if nvidia_key:
+        return [
+            # Primary model
+            NemotronProvider(
+                provider_name="nemotron",
+                client=OpenAI(base_url=NVIDIA_API_BASE_URL, api_key=nvidia_key),
+                model=NVIDIA_MODEL
+            ),
+            # Fallback model (Automatically utilized via NVIDIA API catalog for ultra-fast responses)
+            NemotronProvider(
+                provider_name="nemotron",
+                client=OpenAI(base_url=NVIDIA_API_BASE_URL, api_key=nvidia_key),
+                model=NVIDIA_FALLBACK_MODEL
+            )
+        ]
+    return []
+
 # ─────────────────────────────────────────────
 # Multi-Provider AI Manager
 # ─────────────────────────────────────────────
@@ -188,11 +271,13 @@ class AIClientManager:
     and on-error failover. Thread-safe.
     """
 
-    def __init__(self, provider: str, groq_keys: list[str], openrouter_key: str | None) -> None:
+    def __init__(self, provider: str, groq_keys: list[str], openrouter_key: str | None, cerebras_key: str | None = None, nvidia_key: str | None = None) -> None:
         self._clients = ProviderRegistry.create_clients(
             provider, 
             groq_keys=groq_keys, 
-            openrouter_key=openrouter_key
+            openrouter_key=openrouter_key,
+            cerebras_key=cerebras_key,
+            nvidia_key=nvidia_key
         )
         self._index = 0
         self._lock = threading.Lock()
@@ -265,7 +350,8 @@ class AIClientManager:
                 raw_content = client_wrapper.generate(
                     messages=[{"role": "user", "content": prompt}],
                     temperature=JSON_TEMPERATURE,
-                    max_tokens=JSON_MAX_TOKENS
+                    max_tokens=JSON_MAX_TOKENS,
+                    response_format={"type": "json_object"}
                 )
                 if not raw_content:
                     logger.warning(f"[KeyManager] {client_wrapper.provider} returned empty content. Rotating.")
@@ -334,7 +420,7 @@ class AIClientManager:
 # ─────────────────────────────────────────────
 # Singleton Manager
 # ─────────────────────────────────────────────
-key_manager = AIClientManager(LLM_PROVIDER, GROQ_API_KEYS, OPENROUTER_API_KEY)
+key_manager = AIClientManager(LLM_PROVIDER, GROQ_API_KEYS, OPENROUTER_API_KEY, CEREBRAS_API_KEY, NVIDIA_API_KEY)
 llm_available = key_manager.available
 
 if not llm_available:
@@ -376,9 +462,9 @@ def ai_parse_query(query: str, history: list[dict] = None) -> dict[str, Any]:
     raw_fallback = parse_query(query)
     fallback = {
         "skills": raw_fallback.get("skills", []),
-        "experience": raw_fallback.get("experience"),
-        "min_experience": raw_fallback.get("experience"),
-        "max_experience": None,
+        "experience": raw_fallback.get("min_experience_years"),
+        "min_experience_years": raw_fallback.get("min_experience_years"),
+        "max_experience_years": None,
         "role_keyword": None,
     }
     
@@ -411,8 +497,8 @@ Return ONLY the JSON matching the schema."""
         return {
             "skills": [s.lower().strip() for s in skills if s],
             "experience": experience,
-            "min_experience": min_exp,
-            "max_experience": max_exp,
+            "min_experience_years": min_exp,
+            "max_experience_years": max_exp,
             "role_keyword": response.get("role_keyword"),
             "candidate_name": response.get("candidate_name"),
             "list_all_candidates": response.get("list_all_candidates", False),
@@ -452,6 +538,7 @@ def ai_chatbot_reply(conversation: list[dict], ranked_candidates: list[dict], fi
     role_keyword = filters.get("role_keyword", "")
     skills = filters.get("skills", [])
     experience = filters.get("experience")
+    requests_resumes = filters.get("requests_resumes", False)
 
     # Build a structured summary of ranked candidates for the AI
     has_filters = bool(role_keyword or skills or experience or filters.get("list_all_candidates") or filters.get("candidate_name"))
@@ -465,7 +552,7 @@ def ai_chatbot_reply(conversation: list[dict], ranked_candidates: list[dict], fi
                 f"Score: {c.get('rank_score', 0)} | "
                 f"Skills: {', '.join(c.get('skills', [])[:6])}"
             )
-        ranked_text = "\\n".join(candidates_text)
+        ranked_text = "\n".join(candidates_text)
     elif has_filters:
         ranked_text = "No candidates matched."
     else:
@@ -491,7 +578,7 @@ Your Responsibilities:
 - State exactly how many candidates were matched based on the "Total matched" count provided. Never invent or misstate this number.
 - You MUST list and describe EVERY SINGLE candidate provided in the Available Search Results. Do not omit any candidate.
 - Include each candidate's: Name, Current role, Experience, Skills, and Match score.
-- After summarizing the candidates, you MUST explicitly ask the user: "Would you like to view and download their resumes?"
+- After summarizing the candidates, {"you MUST explicitly ask the user: 'Would you like to view and download their resumes?'" if not requests_resumes else "excitedly confirm and tell the user that the interactive resume cards have been provided in the chat interface below."}
 - If the user explicitly asks to view, provide, or download resumes (e.g. "provide me their resumes"), you must excitedly confirm and tell them that the interactive resume cards have been provided in the chat interface below. Do NOT say you don't have the ability to provide resumes.
 - If no candidates match, clearly state that you couldn't find any matches. Ask the user to provide different technical skills or job titles.
 - If "Available Search Results" says "No search was requested yet.", simply greet the user, mention there are {total_in_db} candidates in the database, and warmly ask what kind of role or skills they are looking for. Do not say "I don't have any matching candidates" or sound like you are making an excuse. Just be helpful.

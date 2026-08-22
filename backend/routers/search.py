@@ -92,8 +92,8 @@ def bot_search(data: BotSearchRequest, background_tasks: BackgroundTasks) -> dic
         "returned_results": len(top_results),
         "filters_used": {
             "skills": filters.get("skills", []),
-            "min_experience": filters.get("min_experience"),
-            "max_experience": filters.get("max_experience"),
+            "min_experience": filters.get("min_experience_years"),
+            "max_experience": filters.get("max_experience_years"),
             "role_keyword": filters.get("role_keyword"),
         },
         "candidates": top_results,
