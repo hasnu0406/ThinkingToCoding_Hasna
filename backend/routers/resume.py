@@ -63,7 +63,7 @@ async def upload_resume(file: UploadFile = File(...)) -> dict[str, Any]:
         pdf.set_font("helvetica", size=12)
         # Sanitize text to latin-1 to avoid fpdf character errors
         clean_text = resume_text.encode('latin-1', 'replace').decode('latin-1')
-        pdf.multi_cell(0, 10, text=clean_text)
+        pdf.multi_cell(0, 10, txt=clean_text)
         pdf.output(pdf_path)
 
     # Upload to Google Drive
