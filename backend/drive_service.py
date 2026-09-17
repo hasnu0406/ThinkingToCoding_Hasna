@@ -15,37 +15,47 @@ from config import GOOGLE_DRIVE_FOLDER_ID
 SCOPES = ['https://www.googleapis.com/auth/drive']
 
 def get_drive_service():
-    """Initializes and returns the Google Drive API service using OAuth 2.0."""
+    """Initializes and returns the Google Drive API service."""
+    from google.oauth2 import service_account
+    
+    # 1. Industry Standard: Try Service Account First (Server-to-Server Auth)
+    service_account_path = os.path.join(os.path.dirname(__file__), 'service_account.json')
+    if os.path.exists(service_account_path):
+        creds = service_account.Credentials.from_service_account_file(
+            service_account_path, scopes=SCOPES
+        )
+        try:
+            return build('drive', 'v3', credentials=creds)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to authenticate via Service Account: {str(e)}")
+
+    # 2. Fallback: Local OAuth Token
     creds_path = os.path.join(os.path.dirname(__file__), 'credentials.json')
     token_path = os.path.join(os.path.dirname(__file__), 'token.json')
     
     if not os.path.exists(creds_path):
-        raise HTTPException(status_code=500, detail="Google Drive credentials.json not found on server.")
+        raise HTTPException(status_code=500, detail="Google Drive credentials not found. Provide service_account.json or credentials.json.")
     
     creds = None
-    # The file token.json stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first time.
     if os.path.exists(token_path):
         creds = Credentials.from_authorized_user_file(token_path, SCOPES)
         
-    # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
+            try:
+                creds.refresh(Request())
+                with open(token_path, 'w') as token:
+                    token.write(creds.to_json())
+            except Exception:
+                raise HTTPException(status_code=401, detail="Google Drive token expired. Please run 'python authenticate_google.py' on the server to re-authenticate.")
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(creds_path, SCOPES)
-            # This requires a local browser and blocks until authenticated
-            creds = flow.run_local_server(port=0)
-            
-        # Save the credentials for the next run
-        with open(token_path, 'w') as token:
-            token.write(creds.to_json())
+            raise HTTPException(status_code=401, detail="Google Drive authentication required. Please run 'python authenticate_google.py' on the server.")
 
     try:
         service = build('drive', 'v3', credentials=creds)
         return service
     except RefreshError as e:
-        raise HTTPException(status_code=401, detail="Google Drive authentication expired. Please re-authenticate.")
+        raise HTTPException(status_code=401, detail="Google Drive authentication expired. Please run 'python authenticate_google.py'.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to authenticate with Google Drive: {str(e)}")
 

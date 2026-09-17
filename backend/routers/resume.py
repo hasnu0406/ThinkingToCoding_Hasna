@@ -18,7 +18,7 @@ import drive_service
 router = APIRouter(prefix="/resume", tags=["Resume"])
 
 @router.post("/upload")
-async def upload_resume(file: UploadFile = File(...)) -> dict[str, Any]:
+def upload_resume(file: UploadFile = File(...)) -> dict[str, Any]:
     file_ext = file.filename.rsplit(".", 1)[-1].lower() if file.filename and "." in file.filename else ""
     file_kind = ALLOWED_TYPES.get(file.content_type)
 
@@ -28,7 +28,7 @@ async def upload_resume(file: UploadFile = File(...)) -> dict[str, Any]:
     if file_kind is None:
         raise _error(400, "Unsupported file type. Upload PDF, DOCX, or TXT only.", "unsupported_type")
 
-    file_bytes = await file.read()
+    file_bytes = file.file.read()
 
     # Duplicate detection
     dup_id = check_duplicate(file_bytes, file.filename or "")
@@ -217,8 +217,23 @@ def download_resume(id: str):
             logger.warning(f"[ResumeDownload] Failed to stream from Google Drive ({e}). Falling back to local/generated PDF.")
         
     pdf_path = document.get("pdf_path")
+    file_kind = document.get("file_kind", "pdf")
+    
     if pdf_path and os.path.exists(pdf_path):
-        return FileResponse(pdf_path, media_type="application/pdf", filename=f"{safe_name}_Resume.pdf")
+        if file_kind == "docx":
+            mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            ext = "docx"
+        elif file_kind == "doc":
+            mime = "application/msword"
+            ext = "doc"
+        elif file_kind == "txt":
+            mime = "text/plain"
+            ext = "txt"
+        else:
+            mime = "application/pdf"
+            ext = "pdf"
+            
+        return FileResponse(pdf_path, media_type=mime, filename=f"{safe_name}_Resume.{ext}")
 
     # Generate on the fly using FPDF from resume_text
     resume_text = document.get("resume_text", "")

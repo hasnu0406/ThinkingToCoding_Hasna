@@ -53,12 +53,36 @@ def rank_candidates(candidates: list[dict[str, Any]], filters: dict[str, Any]) -
         # Name matching (Hard Filter)
         candidate_name = filters.get("candidate_name")
         if candidate_name:
-            if candidate_name.lower() not in candidate.get("name", "").lower():
-                candidate["rank_score"] = 0
-                ranked.append(candidate)
-                continue
+            import difflib
+            c_name = candidate.get("name", "").lower()
+            f_name = candidate_name.lower()
+            
+            if f_name in c_name or c_name in f_name:
+                score += 100
             else:
-                score += 100  # Massive boost for matching name
+                c_words = c_name.split()
+                f_words = f_name.split()
+                
+                all_words_matched = True
+                total_sim = 0.0
+                for fw in f_words:
+                    best_match = 0.0
+                    for cw in c_words:
+                        sim = difflib.SequenceMatcher(None, fw, cw).ratio()
+                        if sim > best_match:
+                            best_match = sim
+                    if best_match >= 0.7:
+                        total_sim += best_match
+                    else:
+                        all_words_matched = False
+                        break
+                
+                if all_words_matched and f_words:
+                    score += int(100 * (total_sim / len(f_words)))
+                else:
+                    candidate["rank_score"] = 0
+                    ranked.append(candidate)
+                    continue
         
         # Skill matching (highest priority)
         candidate_skills = set(s.lower().strip() for s in candidate.get("skills", []))
