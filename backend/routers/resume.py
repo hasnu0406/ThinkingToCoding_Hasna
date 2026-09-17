@@ -12,7 +12,7 @@ from database import resume_collection
 from constants import ALLOWED_TYPES, ALLOWED_EXTENSIONS
 from ai import ai_extract_resume, ai_recommend_jobs
 from logic import check_duplicate, extract_text_from_upload
-from utils import _serialize, _get_object_id, _error
+from utils import _serialize, _get_object_id, _error, logger
 import drive_service
 
 router = APIRouter(prefix="/resume", tags=["Resume"])
@@ -45,41 +45,64 @@ async def upload_resume(file: UploadFile = File(...)) -> dict[str, Any]:
 
     parsed = ai_extract_resume(resume_text)
     recommended_jobs = ai_recommend_jobs(parsed)
-    
-    candidate_id = bson.ObjectId()
-    
-    file_hash = hashlib.sha256(file_bytes).hexdigest()
-    pdf_filename = f"{str(candidate_id)}.pdf"
-    pdf_path = os.path.join("uploads", pdf_filename)
-    os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
-    
-    # Save as PDF temporarily
-    if file_kind == "pdf":
-        with open(pdf_path, "wb") as f:
-            f.write(file_bytes)
-    else:
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("helvetica", size=12)
-        # Sanitize text to latin-1 to avoid fpdf character errors
-        clean_text = resume_text.encode('latin-1', 'replace').decode('latin-1')
-        pdf.multi_cell(0, 10, txt=clean_text)
-        pdf.output(pdf_path)
-
-    # Upload to Google Drive
-    with open(pdf_path, "rb") as f:
-        drive_file_id = drive_service.upload_to_drive(f.read(), pdf_filename)
-        
-    # Clean up local file
-    if os.path.exists(pdf_path):
-        os.remove(pdf_path)
-
     candidate_name = parsed.get("name", "Unknown")
     
+    candidate_id = bson.ObjectId()
+    file_hash = hashlib.sha256(file_bytes).hexdigest()
+    
+    # Save exact original file locally as fallback buffer
+    original_ext = file_ext if file_ext else ("pdf" if file_kind == "pdf" else "docx")
+    saved_filename = f"{str(candidate_id)}.{original_ext}"
+    local_path = os.path.join("uploads", saved_filename)
+    os.makedirs(os.path.dirname(local_path), exist_ok=True)
+    
+    with open(local_path, "wb") as f:
+        f.write(file_bytes)
+
+    # Determine MIME type and Google Drive conversion flag
+    # For DOCX/DOC/TXT, converting to Google Doc preserves all layouts, hyperlinks, fonts & tables
+    convert_to_doc = file_kind in ["docx", "doc", "txt"]
+    if file_kind == "docx":
+        upload_mime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    elif file_kind == "doc":
+        upload_mime = "application/msword"
+    elif file_kind == "txt":
+        upload_mime = "text/plain"
+    else:
+        upload_mime = "application/pdf"
+
+    drive_file_id = None
+    drive_view_link = None
+    stored_path = local_path
+
+    try:
+        drive_res = drive_service.upload_to_drive(
+            file_bytes=file_bytes,
+            filename=f"{candidate_name}_{saved_filename}",
+            mime_type=upload_mime,
+            convert_to_doc=convert_to_doc
+        )
+        drive_file_id = drive_res.get("id")
+        drive_view_link = drive_res.get("web_view_link")
+        
+        # If successfully uploaded to Drive, remove local buffer (or keep if desired)
+        if drive_file_id and os.path.exists(local_path):
+            os.remove(local_path)
+            stored_path = None
+    except Exception as e:
+        logger.warning(f"[ResumeUpload] Google Drive upload failed/token expired ({e}). Storing file locally.")
+        drive_file_id = None
+        drive_view_link = None
+        stored_path = local_path
+
     document = {
         "_id": candidate_id,
         "file_hash": file_hash,
+        "file_name": file.filename or saved_filename,
+        "file_kind": file_kind,
         "drive_file_id": drive_file_id,
+        "drive_view_link": drive_view_link,
+        "pdf_path": stored_path,
         "name": candidate_name,
         "age": parsed.get("age", "Not specified"),
         "experience": parsed.get("experience", "fresher"),
@@ -179,21 +202,41 @@ def download_resume(id: str):
     if not document:
         raise _error(404, "Resume not found.", "not_found")
         
+    safe_name = document.get('name', 'Resume').replace(' ', '_')
     drive_file_id = document.get("drive_file_id")
+    
     if drive_file_id:
-        file_stream = drive_service.download_from_drive(drive_file_id)
-        safe_name = document.get('name', 'Resume').replace(' ', '_')
+        try:
+            file_stream = drive_service.download_from_drive(drive_file_id)
+            return StreamingResponse(
+                file_stream, 
+                media_type="application/pdf", 
+                headers={"Content-Disposition": f"attachment; filename=\"{safe_name}_Resume.pdf\""}
+            )
+        except Exception as e:
+            logger.warning(f"[ResumeDownload] Failed to stream from Google Drive ({e}). Falling back to local/generated PDF.")
+        
+    pdf_path = document.get("pdf_path")
+    if pdf_path and os.path.exists(pdf_path):
+        return FileResponse(pdf_path, media_type="application/pdf", filename=f"{safe_name}_Resume.pdf")
+
+    # Generate on the fly using FPDF from resume_text
+    resume_text = document.get("resume_text", "")
+    if resume_text:
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("helvetica", size=12)
+        clean_text = resume_text.encode('latin-1', 'replace').decode('latin-1')
+        pdf.multi_cell(0, 10, txt=clean_text)
+        pdf_bytes = bytes(pdf.output())
+        import io
         return StreamingResponse(
-            file_stream, 
-            media_type="application/pdf", 
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
             headers={"Content-Disposition": f"attachment; filename=\"{safe_name}_Resume.pdf\""}
         )
         
-    pdf_path = document.get("pdf_path")
-    if not pdf_path or not os.path.exists(pdf_path):
-        raise _error(404, "PDF file not found on server.", "not_found")
-        
-    return FileResponse(pdf_path, media_type="application/pdf", filename=f"{document.get('name', 'resume')}.pdf")
+    raise _error(404, "Resume content not available for download.", "not_found")
 
 
 @router.get("/{id}/recommend")

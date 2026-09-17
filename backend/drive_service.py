@@ -1,5 +1,6 @@
 import os
 import io
+from typing import Any
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -48,8 +49,12 @@ def get_drive_service():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to authenticate with Google Drive: {str(e)}")
 
-def upload_to_drive(file_bytes: bytes, filename: str, mime_type: str = 'application/pdf') -> str:
-    """Uploads a file to Google Drive and returns the file ID."""
+def upload_to_drive(file_bytes: bytes, filename: str, mime_type: str = 'application/pdf', convert_to_doc: bool = False) -> dict[str, Any]:
+    """
+    Uploads a file to Google Drive.
+    If convert_to_doc is True (for DOCX/DOC/TXT), Google Drive automatically converts it into
+    a Google Doc preserving all original formatting, fonts, spacing, tables, and hyperlinks.
+    """
     service = get_drive_service()
     
     # Check if a folder ID is set in the environment
@@ -59,21 +64,47 @@ def upload_to_drive(file_bytes: bytes, filename: str, mime_type: str = 'applicat
     if folder_id:
         file_metadata['parents'] = [folder_id]
         
+    if convert_to_doc:
+        file_metadata['mimeType'] = 'application/vnd.google-apps.document'
+        
     media = MediaIoBaseUpload(io.BytesIO(file_bytes), mimetype=mime_type, resumable=True)
     
     try:
-        file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-        return file.get('id')
+        file = service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields='id, webViewLink, mimeType, name'
+        ).execute()
+        return {
+            "id": file.get('id'),
+            "web_view_link": file.get('webViewLink'),
+            "mime_type": file.get('mimeType'),
+            "name": file.get('name')
+        }
     except HttpError as e:
         raise HTTPException(status_code=502, detail=f"Google Drive API error during upload: {e.reason}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error during upload: {str(e)}")
 
 def download_from_drive(file_id: str) -> io.BytesIO:
-    """Downloads a file from Google Drive and returns it as a BytesIO stream."""
+    """
+    Downloads a file from Google Drive as a PDF stream.
+    If the file is a Google Doc (converted from DOCX/Word/TXT), it uses Google Drive's
+    native files.export API to render a pixel-perfect PDF with full layout, fonts,
+    spacing, and clickable hyperlinks intact.
+    """
     service = get_drive_service()
     try:
-        request = service.files().get_media(fileId=file_id)
+        file_meta = service.files().get(fileId=file_id, fields='mimeType, name').execute()
+        mime_type = file_meta.get('mimeType', '')
+        
+        if mime_type == 'application/vnd.google-apps.document':
+            # Export Google Doc as a formatted PDF
+            request = service.files().export_media(fileId=file_id, mimeType='application/pdf')
+        else:
+            # Standard PDF / binary download
+            request = service.files().get_media(fileId=file_id)
+            
         file_stream = io.BytesIO()
         downloader = MediaIoBaseDownload(file_stream, request)
         done = False
